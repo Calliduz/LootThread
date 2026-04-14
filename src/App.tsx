@@ -12,23 +12,22 @@ import Marquee from './components/Marquee';
 import ProductDetail from './components/ProductDetail';
 import Checkout from './components/Checkout';
 import ArtistDashboard from './components/ArtistDashboard';
-import { apiService } from './services/apiService';
 import { Product } from './types/api';
 import LoginModal from './components/LoginModal';
+import { useProducts } from './hooks/useApi';
 
 export default function App() {
   const [view, setView] = useState<'marketplace' | 'dashboard' | 'artists' | 'product-detail' | 'checkout'>('marketplace');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isServiceUnavailable, setIsServiceUnavailable] = useState(false);
+  const { data: fetchedProducts, isLoading, isError } = useProducts();
   const [filter, setFilter] = useState<'all' | 'skin' | 'attachment'>('all');
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [globalStats, setGlobalStats] = useState({ activeArtists: '0', dropsToday: '0', communityMembers: '0' });
+  const [globalStats] = useState({ activeArtists: '1,240+', dropsToday: '12', communityMembers: '450K' });
   const [cart, setCart] = useState<(Product & { quantity: number })[]>([]);
+
+  const products = fetchedProducts || [];
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -82,40 +81,14 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setIsLoading(true);
-      setError(null);
-      setIsServiceUnavailable(false);
-      try {
-        const [fetchedProducts] = await Promise.all([
-          apiService.getProducts()
-        ]);
-        setProducts(fetchedProducts);
-        setGlobalStats({ activeArtists: '1,240+', dropsToday: '12', communityMembers: '450K' });
-      } catch (err: any) {
-        console.error("Error fetching initial data:", err);
-        if (!err.response) {
-          setIsServiceUnavailable(true);
-        } else {
-          setError("Failed to load marketplace data.");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchInitialData();
-  }, []);
-
-  const filteredProducts = filter === 'all' 
-    ? products 
-    : products.filter(p => p.category === filter);
-
   const handleCheckoutComplete = (orderData: any) => {
     console.log('Order completed:', orderData);
     setCart([]);
   };
+
+  const filteredProducts = filter === 'all' 
+    ? products 
+    : products.filter(p => p.category === filter);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -130,7 +103,7 @@ export default function App() {
         className="sticky top-[73px] z-40 cursor-pointer hover:bg-white/10 transition-colors"
       />
 
-      {isServiceUnavailable ? (
+      {isError ? (
         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-bg-dark">
           <div className="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mb-8 border border-red-500/20">
             <Zap className="w-10 h-10 text-red-500" />

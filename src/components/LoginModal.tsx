@@ -9,29 +9,25 @@ interface LoginModalProps {
   onSuccess: () => void;
 }
 
+import { useLogin } from '../hooks/useApi';
+
 export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const loginMutation = useLogin();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const data = await apiService.login({ name, password });
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('artist', JSON.stringify(data.artist));
-      onSuccess();
-    } catch (err: any) {
-      console.error('Login failed:', err);
-      setError(err.response?.data?.message || 'Invalid credentials. Tactical login failed.');
-    } finally {
-      setIsLoading(false);
-    }
+    loginMutation.mutate({ name, password }, {
+      onSuccess: () => {
+        onSuccess();
+        onClose();
+      }
+    });
   };
+
+  const isLoading = loginMutation.isPending;
+  const error = loginMutation.error ? (loginMutation.error as any).response?.data?.message || 'Invalid credentials. Tactical login failed.' : null;
 
   return (
     <AnimatePresence>

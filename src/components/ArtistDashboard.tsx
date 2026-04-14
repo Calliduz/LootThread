@@ -1,22 +1,21 @@
+import React, { useState } from 'react';
 import { Plus, Package, DollarSign, BarChart3, Upload, TrendingUp, PieChart as PieChartIcon, Award, Loader2 } from 'lucide-react';
 import { apiService } from '../services/apiService';
-import { Artist, ArtistStats, Product } from '../types/api';
+import { useArtistDashboard } from '../hooks/useApi';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Cell, PieChart, Pie, Legend 
 } from 'recharts';
 
-
 export default function ArtistDashboard() {
   const [isUploading, setIsUploading] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [analyticsTab, setAnalyticsTab] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
-  const [artist, setArtist] = useState<Artist | null>(() => {
+  const [artist] = useState(() => {
     const saved = localStorage.getItem('artist');
     return saved ? JSON.parse(saved) : null;
   });
-  const [stats, setStats] = useState<ArtistStats | null>(null);
-  const [analytics, setAnalytics] = useState<any>(null);
+
+  const { stats, analytics, isLoading, refetch } = useArtistDashboard(artist?.id || '');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -24,27 +23,6 @@ export default function ArtistDashboard() {
     price: '',
     inventory: ''
   });
-
-  React.useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!artist?.id) return;
-      setIsLoading(true);
-      try {
-        const [statsData, analyticsData] = await Promise.all([
-          apiService.getArtistStats(artist.id),
-          apiService.getArtistAnalytics(artist.id)
-        ]);
-        setStats(statsData);
-        setAnalytics(analyticsData);
-      } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [artist?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,9 +40,7 @@ export default function ArtistDashboard() {
       });
       alert('Product uploaded successfully!');
       setIsUploading(false);
-      // Refresh stats
-      const newStats = await apiService.getArtistStats(artist.id);
-      setStats(newStats);
+      refetch();
     } catch (error) {
       console.error('Upload error:', error);
     }

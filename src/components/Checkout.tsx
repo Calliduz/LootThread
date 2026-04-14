@@ -1,66 +1,37 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, CreditCard, Truck, Package, ArrowRight, CheckCircle2, X, Wallet, Building2, Landmark, History, Zap, Loader2, AlertCircle } from 'lucide-react';
-import { Product } from '../types/api';
-import { apiService } from '../services/apiService';
-
-interface CartItem extends Product {
-  quantity: number;
-}
-
-interface CheckoutProps {
-  items: CartItem[];
-  onComplete: (orderData: any) => void;
-  onCancel: () => void;
-}
-
-const PAYMENT_METHODS = [
-  { id: 'gcash', name: 'GCash', icon: Wallet, color: 'text-blue-500' },
-  { id: 'paymaya', name: 'PayMaya', icon: Zap, color: 'text-green-500' },
-  { id: 'grabpay', name: 'GrabPay', icon: Truck, color: 'text-green-600' },
-  { id: 'cebuana', name: 'Cebuana Lhuiller', icon: Building2, color: 'text-red-600' },
-  { id: 'western', name: 'Western Union', icon: Landmark, color: 'text-yellow-600' },
-  { id: 'spaylater', name: 'Spaylater', icon: History, color: 'text-orange-500' },
-];
+import { useCreateOrder } from '../hooks/useApi';
 
 export default function Checkout({ items, onComplete, onCancel }: CheckoutProps) {
   const [step, setStep] = useState<'confirm' | 'payment' | 'success'>('confirm');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string>('gcash');
+  const createOrderMutation = useCreateOrder();
   
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = 15.00;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
-  const handleProcessOrder = async () => {
-    setIsProcessing(true);
-    setError(null);
-    
-    try {
-      const orderData = {
-        items: items.map(item => ({
-          productId: item.id!,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        totalAmount: total,
-        paymentMethod: selectedPayment,
-        shippingAddress: "Default Tactical Hub, NCR" // In a real app, this would be from a form
-      };
+  const handleProcessOrder = () => {
+    const orderData = {
+      items: items.map(item => ({
+        productId: item.id!,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      totalAmount: total,
+      paymentMethod: selectedPayment,
+      shippingAddress: "Default Tactical Hub, NCR"
+    };
 
-      const response = await apiService.createOrder(orderData);
-      
-      setIsProcessing(false);
-      setStep('success');
-      onComplete(response);
-    } catch (err: any) {
-      console.error('Order processing failed:', err);
-      setError(err.response?.data?.message || 'Strategic order failure. Connection compromised.');
-      setIsProcessing(false);
-    }
+    createOrderMutation.mutate(orderData, {
+      onSuccess: (response) => {
+        setStep('success');
+        onComplete(response);
+      }
+    });
   };
+
+  const isProcessing = createOrderMutation.isPending;
+  const error = createOrderMutation.error ? (createOrderMutation.error as any).response?.data?.message || 'Strategic order failure. Connection compromised.' : null;
 
   if (step === 'success') {
     return (

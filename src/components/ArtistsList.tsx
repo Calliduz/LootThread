@@ -1,27 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { User, Star, ExternalLink, Zap, Loader2 } from 'lucide-react';
-import { apiService } from '../services/apiService';
-import { Artist } from '../types/api';
+import { useArtists } from '../hooks/useApi';
 
 export default function ArtistsList() {
-  const [artists, setArtists] = useState<Artist[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchArtists = async () => {
-      setIsLoading(true);
-      try {
-        const data = await apiService.getArtists();
-        setArtists(data);
-      } catch (err) {
-        console.error('Failed to fetch artists:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchArtists();
-  }, []);
+  const { data: artists = [], isLoading } = useArtists();
 
   if (isLoading) {
     return (
