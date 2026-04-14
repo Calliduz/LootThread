@@ -1,6 +1,6 @@
 # Deployment Manifest: LootThread
 
-This guide documents the configuration required to deploy the LootThread marketplace to Render (or similar platforms).
+This guide documents the configuration required to deploy the LootThread marketplace to Render.
 
 ## 📊 Environment Variables
 
@@ -9,7 +9,7 @@ Configure these in the Render Static Site dashboard:
 
 | Variable | Description | Example Value |
 | :--- | :--- | :--- |
-| `VITE_API_URL` | The public URL of your deployed backend API. | `https://lootthread-api.onrender.com/api` |
+| `VITE_API_URL` | The public URL of your deployed backend API. | `https://lootthread-server.onrender.com/api` |
 
 ### Backend (`lootthread-server`)
 Configure these in the Render Web Service dashboard:
@@ -19,18 +19,27 @@ Configure these in the Render Web Service dashboard:
 | `MONGODB_URI` | Your MongoDB Atlas connection string. | `mongodb+srv://user:pass@cluster.mongodb.net/lootthread` |
 | `JWT_SECRET` | A secure string for signing tactical auth tokens. | `your_secure_random_production_secret` |
 | `FRONTEND_URL` | The public URL of your deployed frontend. | `https://lootthread.onrender.com` |
-| `PORT` | The port the server should listen on (Render provides this). | `10000` |
-| `NODE_ENV` | Set to `production` to disable verbose error stacks. | `production` |
+| `PORT` | The port Render listens on. | `10000` |
+| `NODE_ENV` | Set to `production`. | `production` |
 
 ---
 
-## 🚀 Deployment Sequence
+## 🚀 Render Dashboard Settings (Backend)
 
-1.  **Database**: Provision a MongoDB Atlas cluster and whitelist access.
-2.  **Backend**:
-    - Build Command: `npm install && npm run build`
-    - Start Command: `npm start`
-    - Seed (Optional): Run `npm run seed` once from your local environment pointing to the production URI to initialize data.
-3.  **Frontend**:
-    - Build Command: `npm install && npm run build`
-    - Publish Directory: `dist`
+To avoid `MODULE_NOT_FOUND` errors, ensure these settings are used:
+
+- **Build Command**: `npm install && npm run build`
+- **Start Command**: `npm start`
+
+---
+
+## 🛠️ Troubleshooting: "TypeScript in Production"
+
+If you encounter `MODULE_NOT_FOUND` errors:
+1.  **Check Build Output**: Ensure `npm run build` is running in your dashboard. This command compiles `.ts` files into the `dist/` directory.
+2.  **Verify Start Command**: Ensure your **Start Command** is `npm start`. This points Render to `node dist/index.js`, which is the compiled entry point.
+3.  **Local Test**: You can test the production build locally by running:
+    ```bash
+    npm run build
+    npm start
+    ```
