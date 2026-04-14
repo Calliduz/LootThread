@@ -1,3 +1,6 @@
+import React from 'react';
+import { motion } from 'motion/react';
+import { Zap, Star, ExternalLink, Loader2 } from 'lucide-react';
 import { useArtists } from '../hooks/useApi';
 
 export default function ArtistsList() {

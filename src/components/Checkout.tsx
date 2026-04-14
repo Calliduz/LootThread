@@ -1,4 +1,27 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ShieldCheck, CreditCard, Truck, Package, ArrowRight, CheckCircle2, X, Wallet, Building2, Landmark, History, Zap, Loader2, AlertCircle } from 'lucide-react';
+import { Product, CreateOrderRequest } from '../types/api';
 import { useCreateOrder } from '../hooks/useApi';
+
+interface CartItem extends Product {
+  quantity: number;
+}
+
+interface CheckoutProps {
+  items: CartItem[];
+  onComplete: (orderData: any) => void;
+  onCancel: () => void;
+}
+
+const PAYMENT_METHODS = [
+  { id: 'gcash', name: 'GCash', icon: Wallet, color: 'text-blue-500' },
+  { id: 'paymaya', name: 'PayMaya', icon: Zap, color: 'text-green-500' },
+  { id: 'grabpay', name: 'GrabPay', icon: Truck, color: 'text-green-600' },
+  { id: 'cebuana', name: 'Cebuana Lhuiller', icon: Building2, color: 'text-red-600' },
+  { id: 'western', name: 'Western Union', icon: Landmark, color: 'text-yellow-600' },
+  { id: 'spaylater', name: 'Spaylater', icon: History, color: 'text-orange-500' },
+];
 
 export default function Checkout({ items, onComplete, onCancel }: CheckoutProps) {
   const [step, setStep] = useState<'confirm' | 'payment' | 'success'>('confirm');
@@ -11,15 +34,10 @@ export default function Checkout({ items, onComplete, onCancel }: CheckoutProps)
   const total = subtotal + shipping + tax;
 
   const handleProcessOrder = () => {
-    const orderData = {
-      items: items.map(item => ({
-        productId: item.id!,
-        quantity: item.quantity,
-        price: item.price
-      })),
+    const orderData: CreateOrderRequest = {
+      items: items,
       totalAmount: total,
-      paymentMethod: selectedPayment,
-      shippingAddress: "Default Tactical Hub, NCR"
+      paymentMethod: selectedPayment
     };
 
     createOrderMutation.mutate(orderData, {

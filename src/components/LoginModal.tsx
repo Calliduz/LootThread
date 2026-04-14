@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Lock, User, Sparkles, Loader2, AlertCircle } from 'lucide-react';
-import { apiService } from '../services/apiService';
 
 interface LoginModalProps {
   isOpen: boolean;

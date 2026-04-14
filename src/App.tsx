@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Zap, ArrowRight, Filter, LayoutGrid, List, Sparkles } from 'lucide-react';
 import Navbar from './components/Navbar';

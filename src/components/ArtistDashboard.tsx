@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Package, DollarSign, BarChart3, Upload, TrendingUp, PieChart as PieChartIcon, Award, Loader2 } from 'lucide-react';
-import { apiService } from '../services/apiService';
-import { useArtistDashboard } from '../hooks/useApi';
+import { useArtistDashboard, useCreateProduct } from '../hooks/useApi';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Cell, PieChart, Pie, Legend 
@@ -16,6 +16,7 @@ export default function ArtistDashboard() {
   });
 
   const { stats, analytics, isLoading, refetch } = useArtistDashboard(artist?.id || '');
+  const createProductMutation = useCreateProduct();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -27,23 +28,28 @@ export default function ArtistDashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!artist) return;
-
-    try {
-      await apiService.createProduct({
-        ...formData,
-        price: parseFloat(formData.price),
-        inventory: parseInt(formData.inventory),
-        category: 'skin',
-        artist: artist.id,
-        images: ['https://picsum.photos/seed/new-skin/600/600'],
-        tags: ['artist-upload']
-      });
-      alert('Product uploaded successfully!');
-      setIsUploading(false);
-      refetch();
-    } catch (error) {
-      console.error('Upload error:', error);
-    }
+    
+    setIsUploading(true);
+    
+    createProductMutation.mutate({
+      ...formData,
+      price: parseFloat(formData.price),
+      inventory: parseInt(formData.inventory),
+      artistId: artist.id,
+      category: 'skin',
+      images: [`https://picsum.photos/seed/${formData.name.replace(/\s+/g, '-')}/800/800`]
+    }, {
+      onSuccess: () => {
+        alert('Product uploaded successfully!');
+        setIsUploading(false);
+        setFormData({ name: '', description: '', price: '', inventory: '' });
+        refetch();
+      },
+      onError: (error) => {
+        console.error('Upload error:', error);
+        setIsUploading(false);
+      }
+    });
   };
 
   if (isLoading) {
@@ -95,8 +101,8 @@ export default function ArtistDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         {[
           { label: 'Total Revenue', value: `$${stats?.totalRevenue?.toLocaleString() || '0.00'}`, icon: DollarSign, color: 'text-brand-primary', trend: '+12.5%' },
-          { label: 'Active Skins', value: stats?.activeSkinsCount?.toString() || '0', icon: Package, color: 'text-brand-accent', trend: '+2' },
-          { label: 'Total Sales', value: stats?.salesCount?.toString() || '0', icon: TrendingUp, color: 'text-brand-secondary', trend: '+18%' },
+          { label: 'Active Skins', value: stats?.activeSkins?.toString() || '0', icon: Package, color: 'text-brand-accent', trend: '+2' },
+          { label: 'Total Sales', value: stats?.totalSales?.toString() || '0', icon: TrendingUp, color: 'text-brand-secondary', trend: '+18%' },
         ].map((stat) => (
           <div key={stat.label} className="bg-bg-card border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -288,71 +294,76 @@ export default function ArtistDashboard() {
         </div>
       </div>
 
-      {isUploading && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setIsUploading(false)} />
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative w-full max-w-lg bg-bg-card border border-white/10 rounded-3xl p-8 shadow-2xl"
-          >
-            <h2 className="text-2xl font-bold mb-6 uppercase italic">Upload New Skin</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block mb-2">Design Name</label>
-                <input 
-                  type="text" 
-                  required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors"
-                  value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block mb-2">Description</label>
-                <textarea 
-                  required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors h-24"
-                  value={formData.description}
-                  onChange={e => setFormData({...formData, description: e.target.value})}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+      <AnimatePresence>
+        {isUploading && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setIsUploading(false)} />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative w-full max-w-lg bg-bg-card border border-white/10 rounded-3xl p-8 shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-bold mb-6 uppercase italic">Upload New Skin</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block mb-2">Price ($)</label>
+                  <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block mb-2">Design Name</label>
                   <input 
-                    type="number" 
+                    type="text" 
                     required
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors"
-                    value={formData.price}
-                    onChange={e => setFormData({...formData, price: e.target.value})}
+                    value={formData.name}
+                    onChange={e => setFormData({...formData, name: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block mb-2">Initial Stock</label>
-                  <input 
-                    type="number" 
+                  <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block mb-2">Description</label>
+                  <textarea 
                     required
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors"
-                    value={formData.inventory}
-                    onChange={e => setFormData({...formData, inventory: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors h-24"
+                    value={formData.description}
+                    onChange={e => setFormData({...formData, description: e.target.value})}
                   />
                 </div>
-              </div>
-              <div className="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center hover:border-brand-accent/50 transition-colors cursor-pointer">
-                <Upload className="w-8 h-8 mx-auto mb-2 text-white/20" />
-                <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Drop your artwork here</p>
-              </div>
-              <button 
-                type="submit"
-                className="w-full bg-brand-accent text-white font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform active:scale-95 uppercase tracking-tighter mt-4"
-              >
-                Publish Skin
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block mb-2">Price ($)</label>
+                    <input 
+                      type="number" 
+                      required
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors"
+                      value={formData.price}
+                      onChange={e => setFormData({...formData, price: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block mb-2">Initial Stock</label>
+                    <input 
+                      type="number" 
+                      required
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors"
+                      value={formData.inventory}
+                      onChange={e => setFormData({...formData, inventory: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center hover:border-brand-accent/50 transition-colors cursor-pointer">
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-white/20" />
+                  <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Drop your artwork here</p>
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isUploading && createProductMutation.isPending}
+                  className="w-full bg-brand-accent text-white font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform active:scale-95 uppercase tracking-tighter mt-4"
+                >
+                  {createProductMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Publish Skin'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

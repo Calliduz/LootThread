@@ -85,6 +85,18 @@ export const useCreateOrder = () => {
   });
 };
 
+export const useCreateProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Product>) => apiService.createProduct(data),
+    onSuccess: () => {
+      // Refresh products and dashboard stats when new gear is uploaded
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['artist-dashboard'] });
+    },
+  });
+};
+
 /**
  * HOOKS: QUIZ
  */
