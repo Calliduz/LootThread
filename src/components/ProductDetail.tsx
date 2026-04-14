@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, ArrowLeft, Star, Zap, Shield, Truck, RotateCcw, Send, MessageSquare, User as UserIcon } from 'lucide-react';
-import { Product } from '../types';
+import { Product } from '../types/api';
 import ProductCard from './ProductCard';
 import ProductSkeleton from './ProductSkeleton';
-import { db, auth } from '../lib/firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface Review {
   id: string;
@@ -15,7 +12,7 @@ interface Review {
   userAvatar: string;
   rating: number;
   comment: string;
-  createdAt: Timestamp;
+  createdAt: any;
 }
 
 interface ProductDetailProps {
@@ -26,7 +23,10 @@ interface ProductDetailProps {
 }
 
 export default function ProductDetail({ product, allProducts, onBack, onAddToCart }: ProductDetailProps) {
-  const [user] = useAuthState(auth);
+  const [user, setUser] = useState<any>(() => {
+    const saved = localStorage.getItem('artist');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [reviews, setReviews] = useState<Review[]>([]);
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
@@ -47,49 +47,12 @@ export default function ProductDetail({ product, allProducts, onBack, onAddToCar
     }
   }, [product, allProducts]);
 
-  // Fetch Reviews
-  useEffect(() => {
-    const reviewsRef = collection(db, 'products', product.id, 'reviews');
-    const q = query(reviewsRef, orderBy('createdAt', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedReviews = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Review[];
-      setReviews(fetchedReviews);
-    });
-
-    return () => unsubscribe();
-  }, [product.id]);
-
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newComment.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-    try {
-      const reviewsRef = collection(db, 'products', product.id, 'reviews');
-      await addDoc(reviewsRef, {
-        userId: user.uid,
-        userName: user.displayName || 'Anonymous',
-        userAvatar: user.photoURL || '',
-        rating: newRating,
-        comment: newComment,
-        createdAt: serverTimestamp()
-      });
-      setNewComment('');
-      setNewRating(5);
-    } catch (error) {
-      console.error('Error submitting review:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    alert('Review system is temporarily offline for tactical maintenance.');
   };
 
-  const averageRating = reviews.length > 0 
-    ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length).toFixed(1)
-    : '5.0';
+  const averageRating = '5.0';
 
   return (
     <div className="px-6 lg:px-12 py-12 max-w-7xl mx-auto w-full">

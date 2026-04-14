@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, CreditCard, Truck, Package, ArrowRight, CheckCircle2, X, Wallet, Building2, Landmark, History, Zap } from 'lucide-react';
-import { Product } from '../types';
+import { ShieldCheck, CreditCard, Truck, Package, ArrowRight, CheckCircle2, X, Wallet, Building2, Landmark, History, Zap, Loader2, AlertCircle } from 'lucide-react';
+import { Product } from '../types/api';
+import { apiService } from '../services/apiService';
 
 interface CartItem extends Product {
   quantity: number;
@@ -25,6 +26,7 @@ const PAYMENT_METHODS = [
 export default function Checkout({ items, onComplete, onCancel }: CheckoutProps) {
   const [step, setStep] = useState<'confirm' | 'payment' | 'success'>('confirm');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string>('gcash');
   
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -34,18 +36,30 @@ export default function Checkout({ items, onComplete, onCancel }: CheckoutProps)
 
   const handleProcessOrder = async () => {
     setIsProcessing(true);
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsProcessing(false);
-    setStep('success');
+    setError(null);
     
-    onComplete({
-      items,
-      totalAmount: total,
-      paymentMethod: selectedPayment,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    });
+    try {
+      const orderData = {
+        items: items.map(item => ({
+          productId: item.id!,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        totalAmount: total,
+        paymentMethod: selectedPayment,
+        shippingAddress: "Default Tactical Hub, NCR" // In a real app, this would be from a form
+      };
+
+      const response = await apiService.createOrder(orderData);
+      
+      setIsProcessing(false);
+      setStep('success');
+      onComplete(response);
+    } catch (err: any) {
+      console.error('Order processing failed:', err);
+      setError(err.response?.data?.message || 'Strategic order failure. Connection compromised.');
+      setIsProcessing(false);
+    }
   };
 
   if (step === 'success') {
@@ -88,6 +102,17 @@ export default function Checkout({ items, onComplete, onCancel }: CheckoutProps)
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Order Summary */}
         <div className="lg:col-span-2 space-y-8">
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl flex items-center gap-4 text-red-500 font-bold"
+            >
+              <AlertCircle className="w-6 h-6 flex-shrink-0" />
+              {error}
+            </motion.div>
+          )}
+
           <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
             <h3 className="text-xl font-bold uppercase italic tracking-tighter mb-6 flex items-center gap-2">
               <Package className="w-5 h-5 text-brand-primary" /> Review Items
@@ -190,7 +215,15 @@ export default function Checkout({ items, onComplete, onCancel }: CheckoutProps)
               disabled={isProcessing}
               className="w-full bg-brand-primary text-black font-black py-5 rounded-2xl uppercase tracking-tighter flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform active:scale-95 shadow-[0_0_30px_rgba(0,255,204,0.2)] disabled:opacity-50"
             >
-              {isProcessing ? 'Processing...' : 'Confirm & Pay'} <ArrowRight className="w-5 h-5" />
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> Finalizing...
+                </>
+              ) : (
+                <>
+                  Confirm & Pay <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </button>
             
             <p className="text-[10px] text-center text-white/20 mt-6 uppercase font-bold tracking-widest">

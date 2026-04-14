@@ -1,40 +1,23 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Plus, Package, DollarSign, BarChart3, Upload, TrendingUp, PieChart as PieChartIcon, Award } from 'lucide-react';
-import { db, auth } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Plus, Package, DollarSign, BarChart3, Upload, TrendingUp, PieChart as PieChartIcon, Award, Loader2 } from 'lucide-react';
+import { apiService } from '../services/apiService';
+import { Artist, ArtistStats, Product } from '../types/api';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Cell, PieChart, Pie, Legend 
 } from 'recharts';
 
-const TREND_DATA = [
-  { name: 'Mon', sales: 400, revenue: 2400 },
-  { name: 'Tue', sales: 300, revenue: 1398 },
-  { name: 'Wed', sales: 200, revenue: 9800 },
-  { name: 'Thu', sales: 278, revenue: 3908 },
-  { name: 'Fri', sales: 189, revenue: 4800 },
-  { name: 'Sat', sales: 239, revenue: 3800 },
-  { name: 'Sun', sales: 349, revenue: 4300 },
-];
-
-const TOP_ITEMS = [
-  { name: 'Cyber Samurai', sales: 120 },
-  { name: 'Glitch Mode', sales: 98 },
-  { name: 'Neon Oni', sales: 86 },
-  { name: 'Void Walker', sales: 72 },
-  { name: 'Synth Wave', sales: 45 },
-];
-
-const CATEGORY_DATA = [
-  { name: 'Jerseys', value: 45, color: '#00ffcc' },
-  { name: 'Hoodies', value: 30, color: '#ff00ff' },
-  { name: 'T-Shirts', value: 25, color: '#00ff66' },
-];
 
 export default function ArtistDashboard() {
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [analyticsTab, setAnalyticsTab] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [artist, setArtist] = useState<Artist | null>(() => {
+    const saved = localStorage.getItem('artist');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [stats, setStats] = useState<ArtistStats | null>(null);
+  const [analytics, setAnalytics] = useState<any>(null);
+  
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -42,27 +25,78 @@ export default function ArtistDashboard() {
     inventory: ''
   });
 
+  React.useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!artist?.id) return;
+      setIsLoading(true);
+      try {
+        const [statsData, analyticsData] = await Promise.all([
+          apiService.getArtistStats(artist.id),
+          apiService.getArtistAnalytics(artist.id)
+        ]);
+        setStats(statsData);
+        setAnalytics(analyticsData);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [artist?.id]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
+    if (!artist) return;
 
     try {
-      await addDoc(collection(db, 'products'), {
+      await apiService.createProduct({
         ...formData,
         price: parseFloat(formData.price),
         inventory: parseInt(formData.inventory),
         category: 'skin',
-        artistId: auth.currentUser.uid,
+        artist: artist.id,
         images: ['https://picsum.photos/seed/new-skin/600/600'],
-        createdAt: serverTimestamp(),
         tags: ['artist-upload']
       });
       alert('Product uploaded successfully!');
       setIsUploading(false);
+      // Refresh stats
+      const newStats = await apiService.getArtistStats(artist.id);
+      setStats(newStats);
     } catch (error) {
       console.error('Upload error:', error);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh]">
+        <Loader2 className="w-12 h-12 text-brand-primary animate-spin mb-4" />
+        <p className="text-white/40 uppercase font-black tracking-widest text-xs">Initializing Tactical Dashboard</p>
+      </div>
+    );
+  }
+
+  // Placeholder analytics data if backend returns empty/null
+  const pieData = analytics?.categories || [
+    { name: 'Jerseys', value: 45, color: '#00ffcc' },
+    { name: 'Hoodies', value: 30, color: '#ff00ff' },
+    { name: 'T-Shirts', value: 25, color: '#00ff66' },
+  ];
+
+  const trendData = analytics?.trend || [
+    { name: 'Mon', sales: 0, revenue: 0 },
+    { name: 'Tue', sales: 0, revenue: 0 },
+    { name: 'Wed', sales: 0, revenue: 0 },
+    { name: 'Thu', sales: 0, revenue: 0 },
+    { name: 'Fri', sales: 0, revenue: 0 },
+    { name: 'Sat', sales: 0, revenue: 0 },
+    { name: 'Sun', sales: 0, revenue: 0 },
+  ];
+
+  const topItems = analytics?.topItems || [];
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -84,9 +118,9 @@ export default function ArtistDashboard() {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         {[
-          { label: 'Total Revenue', value: '$12,450.00', icon: DollarSign, color: 'text-brand-primary', trend: '+12.5%' },
-          { label: 'Active Skins', value: '24', icon: Package, color: 'text-brand-accent', trend: '+2' },
-          { label: 'Total Sales', value: '842', icon: TrendingUp, color: 'text-brand-secondary', trend: '+18%' },
+          { label: 'Total Revenue', value: `$${stats?.totalRevenue?.toLocaleString() || '0.00'}`, icon: DollarSign, color: 'text-brand-primary', trend: '+12.5%' },
+          { label: 'Active Skins', value: stats?.activeSkinsCount?.toString() || '0', icon: Package, color: 'text-brand-accent', trend: '+2' },
+          { label: 'Total Sales', value: stats?.salesCount?.toString() || '0', icon: TrendingUp, color: 'text-brand-secondary', trend: '+18%' },
         ].map((stat) => (
           <div key={stat.label} className="bg-bg-card border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -132,7 +166,7 @@ export default function ArtistDashboard() {
           
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={TREND_DATA}>
+              <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
                 <XAxis 
                   dataKey="name" 
@@ -179,7 +213,7 @@ export default function ArtistDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={CATEGORY_DATA}
+                  data={pieData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -187,7 +221,7 @@ export default function ArtistDashboard() {
                   paddingAngle={8}
                   dataKey="value"
                 >
-                  {CATEGORY_DATA.map((entry, index) => (
+                  {pieData.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -205,7 +239,7 @@ export default function ArtistDashboard() {
           </div>
 
           <div className="space-y-3 mt-6">
-            {CATEGORY_DATA.map((cat) => (
+            {pieData.map((cat: any) => (
               <div key={cat.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
@@ -229,12 +263,12 @@ export default function ArtistDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={TOP_ITEMS} layout="vertical">
+                <BarChart data={topItems} layout="vertical">
                   <XAxis type="number" hide />
                   <YAxis 
                     dataKey="name" 
                     type="category" 
-                    stroke="#white" 
+                    stroke="white" 
                     fontSize={12} 
                     width={100}
                     axisLine={false}
@@ -245,7 +279,7 @@ export default function ArtistDashboard() {
                     contentStyle={{ backgroundColor: '#141414', border: '1px solid #262626', borderRadius: '12px' }}
                   />
                   <Bar dataKey="sales" radius={[0, 4, 4, 0]} barSize={20}>
-                    {TOP_ITEMS.map((entry, index) => (
+                    {topItems.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={index === 0 ? '#00ffcc' : '#262626'} />
                     ))}
                   </Bar>
@@ -254,7 +288,7 @@ export default function ArtistDashboard() {
             </div>
 
             <div className="space-y-4">
-              {TOP_ITEMS.map((item, i) => (
+              {topItems.length > 0 ? topItems.map((item: any, i: number) => (
                 <div key={item.name} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-brand-primary/30 transition-all group">
                   <div className="flex items-center gap-4">
                     <span className="text-xl font-black italic text-white/10 group-hover:text-brand-primary/20 transition-colors">0{i + 1}</span>
@@ -268,7 +302,11 @@ export default function ArtistDashboard() {
                     <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Sales</p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-12">
+                   <p className="text-xs uppercase tracking-widest text-white/20 font-bold">No sales target data yet</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

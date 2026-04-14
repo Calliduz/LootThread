@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingBag, Trash2, Plus, Minus } from 'lucide-react';
-import { Product } from '../types';
+import { Product } from '../types/api';
 
 interface CartItem extends Product {
   quantity: number;

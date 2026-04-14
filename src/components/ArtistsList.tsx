@@ -1,35 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { User, Star, ExternalLink, Zap } from 'lucide-react';
-
-const MOCK_ARTISTS = [
-  {
-    id: 'a1',
-    name: 'LootArtist',
-    bio: 'Specializing in glitch-art and cyberpunk aesthetics. Designing since Season 0.',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LootArtist',
-    sales: '12K+',
-    rating: 4.9
-  },
-  {
-    id: 'a2',
-    name: 'NeonOni',
-    bio: 'Traditional Japanese motifs meets futuristic neon. Every skin tells a story.',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=NeonOni',
-    sales: '8K+',
-    rating: 4.8
-  },
-  {
-    id: 'a3',
-    name: 'VoidWalker',
-    bio: 'Minimalist designs for the stealthy player. Dark mode is the only mode.',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=VoidWalker',
-    sales: '5K+',
-    rating: 4.7
-  }
-];
+import { User, Star, ExternalLink, Zap, Loader2 } from 'lucide-react';
+import { apiService } from '../services/apiService';
+import { Artist } from '../types/api';
 
 export default function ArtistsList() {
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArtists = async () => {
+      setIsLoading(true);
+      try {
+        const data = await apiService.getArtists();
+        setArtists(data);
+      } catch (err) {
+        console.error('Failed to fetch artists:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchArtists();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh]">
+        <Loader2 className="w-12 h-12 text-brand-primary animate-spin mb-4" />
+        <p className="text-white/40 uppercase font-black tracking-widest text-xs">Loading Creators</p>
+      </div>
+    );
+  }
+
   return (
     <div className="px-6 lg:px-12 py-24 max-w-7xl mx-auto">
       <div className="mb-16">
@@ -40,7 +42,7 @@ export default function ArtistsList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {MOCK_ARTISTS.map((artist, i) => (
+        {artists.map((artist, i) => (
           <motion.div
             key={artist.id}
             initial={{ opacity: 0, y: 20 }}
@@ -78,11 +80,11 @@ export default function ArtistsList() {
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                 <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-1">Total Sales</p>
-                <p className="text-xl font-mono font-bold text-white">{artist.sales}</p>
+                <p className="text-xl font-mono font-bold text-white">{artist.salesCount}</p>
               </div>
               <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                 <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-1">Drops</p>
-                <p className="text-xl font-mono font-bold text-white">12</p>
+                <p className="text-xl font-mono font-bold text-white">{artist.activeSkinsCount || 0}</p>
               </div>
             </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ShoppingCart, Star, Zap } from 'lucide-react';
-import { Product } from '../types';
+import { Product } from '../types/api';
 
 interface ProductCardProps {
   product: Product;

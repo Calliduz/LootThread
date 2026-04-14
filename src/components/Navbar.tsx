@@ -1,7 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, User, Search, Menu, Zap, X, ArrowRight } from 'lucide-react';
-import { auth, login, logout } from '../lib/firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface NavbarProps {
@@ -11,9 +9,26 @@ interface NavbarProps {
 }
 
 export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProps) {
-  const [user] = useAuthState(auth);
-
+  const [user, setUser] = useState<any>(null);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  useEffect(() => {
+    const checkUser = () => {
+      const saved = localStorage.getItem('artist');
+      setUser(saved ? JSON.parse(saved) : null);
+    };
+    checkUser();
+    // Listen for storage changes (for login/logout in other tabs or components)
+    window.addEventListener('storage', checkUser);
+    return () => window.removeEventListener('storage', checkUser);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('artist');
+    setUser(null);
+    onNavigate('marketplace');
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full glass border-b border-white/10 px-4 md:px-8 py-4 flex items-center justify-between">
@@ -65,14 +80,14 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
             <div className="flex flex-col items-end hidden sm:flex">
               <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{user.displayName?.split(' ')[0]}</span>
               <button 
-                onClick={logout}
+                onClick={handleLogout}
                 className="text-[8px] uppercase font-black tracking-widest text-white/30 hover:text-brand-accent transition-colors"
               >
                 Disconnect
               </button>
             </div>
             <img 
-              src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} 
+              src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} 
               alt="Profile" 
               className="w-10 h-10 rounded-xl border-2 border-white/5 hover:border-brand-primary/50 transition-all cursor-pointer"
               referrerPolicy="no-referrer"
@@ -80,7 +95,7 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
           </div>
         ) : (
           <button 
-            onClick={login}
+            onClick={() => onNavigate('dashboard')}
             className="bg-brand-primary text-black px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-[0_0_20px_rgba(0,255,204,0.2)]"
           >
             Connect
@@ -149,7 +164,7 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
               <div className="mt-auto pt-8 border-t border-white/5">
                 {user && (
                   <button 
-                    onClick={() => { logout(); setIsMenuOpen(false); }}
+                    onClick={() => { handleLogout(); setIsMenuOpen(false); }}
                     className="w-full py-4 bg-white/5 rounded-xl text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
                   >
                     Logout

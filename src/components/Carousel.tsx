@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
-import { Product } from '../types';
+import { Product } from '../types/api';
 
 interface CarouselProps {
   products: Product[];
