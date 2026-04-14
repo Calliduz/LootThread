@@ -178,7 +178,7 @@ export default function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   <AnimatePresence mode="popLayout">
                     {isLoading ? [...Array(8)].map((_, i) => <ProductSkeleton key={i} />) : 
-                      filteredProducts.map(p => <ProductCard key={p.id} product={p} onAddToCart={addToCart} onClick={openProductDetail} />)}
+                      filteredProducts.map(p => <ProductCard key={p.id || (p as any)._id} product={p} onAddToCart={addToCart} onClick={openProductDetail} />)}
                   </AnimatePresence>
                 </div>
               </section>
