@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiService } from '../services/apiService';
-import { Product, Artist, ArtistStats, CreateOrderRequest } from '../types/api';
+import * as api from '../api/endpoints';
+import { Product, CreateOrderRequest } from '../types/api';
 
 /**
  * HOOKS: PRODUCTS
@@ -8,14 +8,14 @@ import { Product, Artist, ArtistStats, CreateOrderRequest } from '../types/api';
 export const useProducts = () => {
   return useQuery({
     queryKey: ['products'],
-    queryFn: apiService.getProducts,
+    queryFn: api.getProducts,
   });
 };
 
 export const useProduct = (id: string) => {
   return useQuery({
     queryKey: ['products', id],
-    queryFn: () => apiService.getProductById(id),
+    queryFn: () => api.getProductById(id),
     enabled: !!id,
   });
 };
@@ -26,7 +26,7 @@ export const useProduct = (id: string) => {
 export const useArtists = () => {
   return useQuery({
     queryKey: ['artists'],
-    queryFn: apiService.getArtists,
+    queryFn: api.getArtists,
   });
 };
 
@@ -36,14 +36,14 @@ export const useArtists = () => {
 export const useArtistDashboard = (id: string) => {
   const statsQuery = useQuery({
     queryKey: ['artist-dashboard', 'stats', id],
-    queryFn: () => apiService.getArtistStats(id),
+    queryFn: () => api.getArtistStats(id),
     enabled: !!id,
     staleTime: 0, // Ensure fresh stats on refresh
   });
 
   const analyticsQuery = useQuery({
     queryKey: ['artist-dashboard', 'analytics', id],
-    queryFn: () => apiService.getArtistAnalytics(id),
+    queryFn: () => api.getArtistAnalytics(id),
     enabled: !!id,
     staleTime: 1000 * 60 * 2, // 2 minutes for analytics
   });
@@ -66,7 +66,7 @@ export const useArtistDashboard = (id: string) => {
  */
 export const useLogin = () => {
   return useMutation({
-    mutationFn: (credentials: any) => apiService.login(credentials),
+    mutationFn: (credentials: any) => api.login(credentials),
     onSuccess: (data) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('artist', JSON.stringify(data.artist));
@@ -77,7 +77,7 @@ export const useLogin = () => {
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateOrderRequest) => apiService.createOrder(data),
+    mutationFn: (data: CreateOrderRequest) => api.createOrder(data),
     onSuccess: () => {
       // Strategic invalidation: refresh dashboard stats when sales occur
       queryClient.invalidateQueries({ queryKey: ['artist-dashboard'] });
@@ -88,7 +88,7 @@ export const useCreateOrder = () => {
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Product>) => apiService.createProduct(data),
+    mutationFn: (data: Partial<Product>) => api.createProduct(data),
     onSuccess: () => {
       // Refresh products and dashboard stats when new gear is uploaded
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -103,6 +103,6 @@ export const useCreateProduct = () => {
 export const useQuiz = () => {
   return useQuery({
     queryKey: ['quiz'],
-    queryFn: apiService.getQuiz,
+    queryFn: api.getQuiz,
   });
 };
