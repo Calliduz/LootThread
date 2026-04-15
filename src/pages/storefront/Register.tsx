@@ -20,9 +20,23 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // --- Validation ---
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Passcode must be at least 6 characters.');
+      return;
+    }
+
     try {
-      await register({ name, email, password });
-      navigate('/account');
+      const data = await register({ name, email, password });
+      // Registration is usually customer, but let's be robust
+      const isAdmin = data?.user?.role === 'admin';
+      navigate(isAdmin ? '/admin' : '/account', { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     }

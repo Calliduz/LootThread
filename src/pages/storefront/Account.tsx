@@ -43,6 +43,7 @@ export default function Account() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [savingPw, setSavingPw] = useState(false);
 
   // --- Address State ---
@@ -73,8 +74,8 @@ export default function Account() {
       toast.error('New passwords do not match.');
       return;
     }
-    if (newPassword.length < 8) {
-      toast.error('New password must be at least 8 characters.');
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters.');
       return;
     }
     setSavingPw(true);
@@ -86,7 +87,12 @@ export default function Account() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to update password.');
+      const status = err?.response?.status;
+      if (status === 401 || status === 400) {
+        toast.error('Current passcode is incorrect or invalid.');
+      } else {
+        toast.error(err?.response?.data?.message || 'Failed to update passcode.');
+      }
     } finally {
       setSavingPw(false);
     }
@@ -340,14 +346,24 @@ export default function Account() {
                       </div>
 
                       {/* Confirm Password */}
-                      <input
-                        type="password"
-                        placeholder="Confirm new passcode"
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        required
-                        className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white outline-none focus:border-brand-primary/40 placeholder-white/20"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showConfirm ? 'text' : 'password'}
+                          placeholder="Confirm new passcode"
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          required
+                          className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white pr-9 outline-none focus:border-brand-primary/40 placeholder-white/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-brand-primary transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showConfirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
 
                       <button
                         type="submit"

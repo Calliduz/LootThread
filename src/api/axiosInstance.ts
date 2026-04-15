@@ -25,7 +25,10 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    // Skip global 401 logout if it's the password update endpoint
+    const isUpdatePassword = error.config?.url?.includes('/auth/update-password');
+    
+    if (error.response && error.response.status === 401 && !isUpdatePassword) {
       localStorage.removeItem('token');
       // Redirect to login if necessary or handle globally
       window.dispatchEvent(new Event('auth-error'));

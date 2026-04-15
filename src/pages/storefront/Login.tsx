@@ -20,12 +20,31 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // --- Validation ---
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Passcode must be at least 6 characters.');
+      return;
+    }
+
     try {
       const data = await login({ email, password });
-      // Role-aware redirect: admins go to /admin, customers go to /account
-      const fallback = data.user.role === 'admin' ? '/admin' : '/account';
+      
+      // --- Strict Role-Based Redirect ---
+      const isAdmin = data.user.role === 'admin';
+      const fallback = isAdmin ? '/admin' : '/account';
+      
+      // If admin, we ALWAYS go to /admin ignoring the "from" state
+      // unless the "from" state is specifically another admin page.
       const origin = (location.state as any)?.from?.pathname;
-      navigate(origin && origin !== '/login' ? origin : fallback);
+      const shouldHonourOrigin = origin && origin !== '/login' && (!isAdmin || origin.startsWith('/admin'));
+      
+      navigate(shouldHonourOrigin ? origin : fallback, { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }

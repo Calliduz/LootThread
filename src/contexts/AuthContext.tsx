@@ -13,7 +13,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
-  register: (data: { name: string; email: string; password: string }) => Promise<void>;
+  register: (data: { name: string; email: string; password: string }) => Promise<AuthResponse>;
   loginWithToken: (token: string) => void;
   logout: () => void;
 }
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (credentials: { name: string; email: string; password: string }) => {
+  const register = useCallback(async (credentials: { name: string; email: string; password: string }): Promise<AuthResponse> => {
     setState(prev => ({ ...prev, isLoading: true }));
     try {
       const data: AuthResponse = await registerApi(credentials);
@@ -98,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAdmin: data.user.role === 'admin',
         isLoading: false,
       });
+      return data;
     } catch (error) {
       setState(prev => ({ ...prev, isLoading: false }));
       throw error;
