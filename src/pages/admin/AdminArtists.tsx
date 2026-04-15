@@ -5,6 +5,7 @@ import {
 } from '../../api/endpoints';
 import { Plus, Edit2, Trash2, X, User as UserIcon } from 'lucide-react';
 import { SkeletonRow } from '../../components/Skeleton';
+import ImageUpload from '../../components/admin/ImageUpload';
 import toast from 'react-hot-toast';
 
 export default function AdminArtists() {
@@ -169,7 +170,11 @@ export default function AdminArtists() {
                     <td className="px-6 py-4">
                       <div className="w-10 h-10 bg-white/5 rounded-full border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
                         {img ? (
-                          <img src={img} alt={artist.name} className="w-full h-full object-cover" />
+                          <img 
+                            src={img.startsWith('http') ? img : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${img}`} 
+                            alt={artist.name} 
+                            className="w-full h-full object-cover" 
+                          />
                         ) : (
                           <UserIcon className="w-4 h-4 text-white/20" />
                         )}
@@ -272,22 +277,12 @@ export default function AdminArtists() {
                   />
                 </div>
 
-                {/* Image URL */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-white/40">Avatar Image URL</label>
-                  <input
-                    type="url"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-brand-primary/50"
-                    placeholder="https://images.unsplash.com/..."
-                    value={formData.imageUrl}
-                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                  />
-                  {formData.imageUrl && (
-                    <div className="mt-4 w-16 h-16 rounded-full overflow-hidden border border-white/10">
-                      <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                </div>
+                {/* Avatar Image Upload */}
+                <ImageUpload
+                  label="Avatar Image"
+                  value={formData.imageUrl}
+                  onChange={url => setFormData({ ...formData, imageUrl: url })}
+                />
 
                 {/* Status Toggle */}
                 <label className="flex items-center gap-3 cursor-pointer p-4 bg-white/[0.02] border border-white/5 rounded-xl hover:bg-white/5 transition-colors">

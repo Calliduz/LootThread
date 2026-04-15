@@ -6,6 +6,7 @@ import {
 } from '../../api/endpoints';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import { SkeletonRow } from '../../components/Skeleton';
+import ImageUpload from '../../components/admin/ImageUpload';
 import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
@@ -206,7 +207,11 @@ export default function AdminProducts() {
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
                           {img ? (
-                            <img src={img} alt={product.title} className="w-full h-full object-cover" />
+                            <img 
+                              src={img.startsWith('http') ? img : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${img}`} 
+                              alt={product.title} 
+                              className="w-full h-full object-cover" 
+                            />
                           ) : (
                             <ImageIcon className="w-5 h-5 text-white/20" />
                           )}
@@ -386,22 +391,12 @@ export default function AdminProducts() {
                   </div>
                 </div>
 
-                {/* Image URL */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-white/40">Image URL</label>
-                  <input
-                    type="url"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-brand-primary/50"
-                    placeholder="https://images.unsplash.com/..."
-                    value={formData.imageUrl}
-                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                  />
-                  {formData.imageUrl && (
-                    <div className="mt-4 w-32 h-32 rounded-xl overflow-hidden border border-white/10">
-                      <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                </div>
+                {/* Image Upload */}
+                <ImageUpload
+                  label="Product Image"
+                  value={formData.imageUrl}
+                  onChange={url => setFormData({ ...formData, imageUrl: url })}
+                />
               </form>
             </div>
 

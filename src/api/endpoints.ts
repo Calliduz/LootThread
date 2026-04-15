@@ -218,3 +218,15 @@ export const subscribeNewsletter = async (email: string) => {
   const response = await axiosInstance.post('/newsletter/subscribe', { email });
   return response.data;
 };
+
+// ---------------------------------------------------------------------------
+// UPLOAD
+// ---------------------------------------------------------------------------
+export const uploadImage = async (file: File): Promise<{ url: string; message: string }> => {
+  const formData = new FormData();
+  formData.append('image', file);
+  const response = await axiosInstance.post('/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};

@@ -5,6 +5,8 @@ import {
 } from '../../api/endpoints';
 import { Plus, Edit2, Trash2, X, Code, AlignLeft, Image as ImageIcon, Braces, FileText } from 'lucide-react';
 import { SkeletonRow } from '../../components/Skeleton';
+import ImageUpload from '../../components/admin/ImageUpload';
+import JsonEditor from '../../components/admin/JsonEditor';
 import toast from 'react-hot-toast';
 
 export default function AdminCMS() {
@@ -21,7 +23,7 @@ export default function AdminCMS() {
   const [formData, setFormData] = useState({
     key: '',
     type: 'text' as 'text' | 'json' | 'image' | 'array',
-    value: '',
+    value: '' as any,
     isActive: true,
   });
 
@@ -57,21 +59,10 @@ export default function AdminCMS() {
   const handleOpenEdit = (cms: CMSContent) => {
     setEditingCms(cms);
     
-    let parsedValue = '';
-    if (cms.type === 'json' || cms.type === 'array') {
-      try {
-        parsedValue = typeof cms.value === 'string' ? cms.value : JSON.stringify(cms.value, null, 2);
-      } catch (e) {
-        parsedValue = String(cms.value);
-      }
-    } else {
-      parsedValue = String(cms.value || '');
-    }
-
     setFormData({
       key: cms.key,
       type: cms.type,
-      value: parsedValue,
+      value: cms.value,
       isActive: cms.isActive !== false,
     });
     setIsModalOpen(true);
@@ -98,8 +89,8 @@ export default function AdminCMS() {
     
     let processedValue: any = formData.value;
 
-    // Safety JSON Parser
-    if (formData.type === 'json' || formData.type === 'array') {
+    // Safety JSON Parser (only if the user managed to force it through as a string incorrectly)
+    if ((formData.type === 'json' || formData.type === 'array') && typeof formData.value === 'string') {
       try {
         processedValue = JSON.parse(formData.value);
       } catch {
@@ -303,38 +294,41 @@ export default function AdminCMS() {
                     />
                   </div>
 
-                  {/* Type */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-white/40">Data Type</label>
-                    <select
-                      className="w-full bg-[#1c1c1c] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-brand-primary/50"
-                      value={formData.type}
-                      onChange={e => setFormData({ ...formData, type: e.target.value as any })}
-                    >
-                      <option value="text">Plain Text</option>
-                      <option value="json">JSON Object Map</option>
                       <option value="array">JSON Array Collection</option>
-                      <option value="image">Image URL</option>
+                      <option value="image">Image Asset</option>
                     </select>
                   </div>
                 </div>
 
-                {/* Value Textarea */}
-                <div className="space-y-2">
+                {/* Dynamic Content Editor */}
+                <div className="space-y-4">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-white/40">Value Payload</label>
-                    {(formData.type === 'json' || formData.type === 'array') && (
-                      <span className="text-[10px] text-brand-primary uppercase tracking-wider font-bold">Requires valid JSON syntax</span>
-                    )}
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/40">Content Value</label>
                   </div>
-                  <textarea
-                    required
-                    rows={10}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-brand-primary/50 font-mono resize-y"
-                    placeholder={formData.type === 'json' ? '{\n  "title": "Welcome",\n  "subtitle": "Explore Drops"\n}' : formData.type === 'array' ? '[\n  "Item 1",\n  "Item 2"\n]' : 'Enter content blocks here...'}
-                    value={formData.value}
-                    onChange={e => setFormData({ ...formData, value: e.target.value })}
-                  />
+
+                  {formData.type === 'image' ? (
+                    <ImageUpload 
+                      value={formData.value}
+                      onChange={url => setFormData({ ...formData, value: url })}
+                    />
+                  ) : (formData.type === 'json' || formData.type === 'array') ? (
+                    <div className="bg-black/20 border border-white/5 p-4 rounded-xl">
+                      <JsonEditor 
+                        type={formData.type}
+                        value={formData.value}
+                        onChange={val => setFormData({ ...formData, value: val })}
+                      />
+                    </div>
+                  ) : (
+                    <textarea
+                      required
+                      rows={8}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-brand-primary/50 font-mono resize-y"
+                      placeholder="Enter content text..."
+                      value={formData.value}
+                      onChange={e => setFormData({ ...formData, value: e.target.value })}
+                    />
+                  )}
                 </div>
 
                 {/* Status Toggle */}
