@@ -23,6 +23,7 @@ import Account from './pages/storefront/Account';
 import OAuthCallback from './pages/storefront/OAuthCallback';
 import Checkout from './pages/storefront/Checkout';
 import Receipt from './pages/storefront/Receipt';
+import PrivacyPolicy from './pages/storefront/PrivacyPolicy';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 
@@ -55,6 +56,7 @@ export default function App() {
           {/* Public Storefront Route */}
           <Route path="/" element={<Storefront />} />
           <Route path="/marketplace" element={<Storefront />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
 
           {/* Admin Login */}
           {/* Customer Auth Routes */}

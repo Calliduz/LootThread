@@ -64,9 +64,13 @@ export default function Footer() {
         </div>
       </div>
       
-      {/* Copyright Line */}
-      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/5 text-center text-xs text-white/30 uppercase tracking-widest font-mono">
-        © {new Date().getFullYear()} LootThread. All rights reserved.
+      {/* Copyright & Legal */}
+      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-white/30 uppercase tracking-widest font-mono">
+        <div>© {new Date().getFullYear()} LootThread. All rights reserved.</div>
+        <div className="flex gap-6 items-center">
+          <a href="/privacy" className="hover:text-brand-primary transition-colors">Privacy Protocol</a>
+          <span>// Terminate Data</span>
+        </div>
       </div>
     </footer>
   );
