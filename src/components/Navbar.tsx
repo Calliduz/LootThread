@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, User, Search, Menu, Zap, X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
   cartCount: number;
@@ -9,25 +11,13 @@ interface NavbarProps {
 }
 
 export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProps) {
-  const [user, setUser] = useState<any>(null);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-
-  useEffect(() => {
-    const checkUser = () => {
-      const saved = localStorage.getItem('artist');
-      setUser(saved ? JSON.parse(saved) : null);
-    };
-    checkUser();
-    // Listen for storage changes (for login/logout in other tabs or components)
-    window.addEventListener('storage', checkUser);
-    return () => window.removeEventListener('storage', checkUser);
-  }, []);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('artist');
-    setUser(null);
-    onNavigate('marketplace');
+    logout();
+    navigate('/');
   };
 
   return (
@@ -48,7 +38,7 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
         <button onClick={() => onNavigate('skins')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Skins</button>
         <button onClick={() => onNavigate('attachments')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Attachments</button>
         <button onClick={() => onNavigate('artists')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Artists</button>
-        {user && (
+        {isAuthenticated && user?.role === 'admin' && (
           <button onClick={() => onNavigate('dashboard')} className="text-brand-accent hover:text-white hover:tracking-[0.3em] transition-all duration-300">Dashboard</button>
         )}
       </div>
@@ -75,10 +65,10 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
           )}
         </button>
 
-        {user ? (
+        {isAuthenticated ? (
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-end hidden sm:flex">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{user.displayName?.split(' ')[0]}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{user?.name?.split(' ')[0]}</span>
               <button 
                 onClick={handleLogout}
                 className="text-[8px] uppercase font-black tracking-widest text-white/30 hover:text-brand-accent transition-colors"
@@ -86,20 +76,33 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
                 Disconnect
               </button>
             </div>
-            <img 
-              src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} 
-              alt="Profile" 
-              className="w-10 h-10 rounded-xl border-2 border-white/5 hover:border-brand-primary/50 transition-all cursor-pointer"
-              referrerPolicy="no-referrer"
-            />
+            <div 
+              onClick={() => navigate('/account')}
+              className="w-10 h-10 rounded-xl border-2 border-white/5 hover:border-brand-primary/50 transition-all cursor-pointer overflow-hidden bg-white/5 flex items-center justify-center p-0.5"
+            >
+              <img 
+                src={user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`} 
+                alt="Profile" 
+                className="w-full h-full rounded-lg bg-black"
+                referrerPolicy="no-referrer"
+              />
+            </div>
           </div>
         ) : (
-          <button 
-            onClick={() => onNavigate('dashboard')}
-            className="bg-brand-primary text-black px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-[0_0_20px_rgba(0,255,204,0.2)]"
-          >
-            Connect
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate('/login')}
+              className="text-white hover:text-brand-primary px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors hidden sm:block"
+            >
+              Sign In
+            </button>
+            <button 
+              onClick={() => navigate('/register')}
+              className="bg-brand-primary text-black px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-[0_0_20px_rgba(0,255,204,0.2)]"
+            >
+              Register
+            </button>
+          </div>
         )}
         
         <button 
@@ -152,23 +155,45 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
                 >
                   Artists <ArrowRight className="w-4 h-4" />
                 </button>
-                {user && (
+                {isAuthenticated && user?.role === 'admin' ? (
                   <button 
                     onClick={() => { onNavigate('dashboard'); setIsMenuOpen(false); }} 
                     className="text-left text-brand-accent hover:text-white transition-colors flex items-center justify-between"
                   >
                     Dashboard <ArrowRight className="w-4 h-4" />
                   </button>
-                )}
+                ) : isAuthenticated ? (
+                  <button 
+                    onClick={() => { navigate('/account'); setIsMenuOpen(false); }} 
+                    className="text-left text-brand-primary hover:text-white transition-colors flex items-center justify-between"
+                  >
+                    My Account <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : null}
               </div>
               <div className="mt-auto pt-8 border-t border-white/5">
-                {user && (
+                {isAuthenticated ? (
                   <button 
                     onClick={() => { handleLogout(); setIsMenuOpen(false); }}
                     className="w-full py-4 bg-white/5 rounded-xl text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
                   >
                     Logout
                   </button>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => { navigate('/login'); setIsMenuOpen(false); }}
+                      className="w-full py-4 bg-white/5 rounded-xl text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
+                    >
+                      Login
+                    </button>
+                    <button 
+                      onClick={() => { navigate('/register'); setIsMenuOpen(false); }}
+                      className="w-full py-4 bg-brand-primary text-black rounded-xl text-xs font-black uppercase tracking-widest hover:brightness-110 transition-colors"
+                    >
+                      Register
+                    </button>
+                  </div>
                 )}
               </div>
             </motion.div>

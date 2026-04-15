@@ -18,6 +18,16 @@ export const register = async (data: { name: string; email: string; password: st
   return response.data;
 };
 
+export const forgotPassword = async (email: string) => {
+  const response = await axiosInstance.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+export const resetPassword = async (data: { email: string; otp: string; newPassword: string }) => {
+  const response = await axiosInstance.post('/auth/reset-password', data);
+  return response.data;
+};
+
 // ---------------------------------------------------------------------------
 // PRODUCTS
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, LoginCredentials, AuthResponse } from '../types/api';
-import { login as loginApi } from '../api/endpoints';
+import { login as loginApi, register as registerApi } from '../api/endpoints';
 
 interface AuthState {
   user: User | null;
@@ -12,6 +12,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
+  register: (data: { name: string; email: string; password: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -84,6 +85,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const register = useCallback(async (credentials: { name: string; email: string; password: string }) => {
+    setState(prev => ({ ...prev, isLoading: true }));
+    try {
+      const data: AuthResponse = await registerApi(credentials);
+      persistAuth(data.user, data.token);
+      setState({
+        user: data.user,
+        token: data.token,
+        isAuthenticated: true,
+        isAdmin: data.user.role === 'admin',
+        isLoading: false,
+      });
+    } catch (error) {
+      setState(prev => ({ ...prev, isLoading: false }));
+      throw error;
+    }
+  }, []);
+
   const logout = useCallback(() => {
     persistAuth(null, null);
     setState({
@@ -93,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
