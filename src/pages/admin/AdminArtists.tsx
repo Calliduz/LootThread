@@ -3,7 +3,9 @@ import { Artist } from '../../types/api';
 import {
   getArtists, createArtist, updateArtist, deleteArtist
 } from '../../api/endpoints';
-import { Plus, Edit2, Trash2, X, Loader2, User as UserIcon } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, User as UserIcon } from 'lucide-react';
+import { SkeletonRow } from '../../components/Skeleton';
+import toast from 'react-hot-toast';
 
 export default function AdminArtists() {
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -69,13 +71,13 @@ export default function AdminArtists() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this artist?')) return;
+    if (!window.confirm('Delete this artist?')) return;
     try {
       await deleteArtist(id);
       setArtists(prev => prev.filter(a => a.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete artist.');
+      toast.success('Artist deleted.');
+    } catch {
+      toast.error('Failed to delete artist.');
     }
   };
 
@@ -97,10 +99,10 @@ export default function AdminArtists() {
       }
       
       handleCloseModal();
-      await fetchData(); // Refresh data grid
-    } catch (err) {
-      console.error(err);
-      alert('Failed to save artist.');
+      toast.success(editingArtist ? 'Artist updated.' : 'Artist created.');
+      await fetchData();
+    } catch {
+      toast.error('Failed to save artist.');
     } finally {
       setSaving(false);
     }
@@ -108,9 +110,8 @@ export default function AdminArtists() {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-        <p className="text-white/50 text-sm font-bold uppercase tracking-widest">Loading Roster</p>
+      <div className="space-y-2">
+        {[...Array(5)].map((_, i) => <SkeletonRow key={i} cols={5} />)}
       </div>
     );
   }
@@ -214,8 +215,12 @@ export default function AdminArtists() {
               })}
               {artists.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-white/30 italic">
-                    No artists found in the roster.
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <UserIcon className="w-12 h-12 text-white/10" />
+                      <p className="text-white/30 font-bold uppercase tracking-widest text-sm">No artists in roster</p>
+                      <p className="text-white/20 text-xs">Add your first creator to get started.</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -318,7 +323,7 @@ export default function AdminArtists() {
                 disabled={saving}
                 className="px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider bg-brand-primary text-black hover:brightness-110 disabled:opacity-50 transition-all flex items-center gap-2"
               >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving && <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
                 {editingArtist ? 'Save Changes' : 'Create Artist'}
               </button>
             </div>

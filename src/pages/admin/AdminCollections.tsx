@@ -3,7 +3,9 @@ import { Collection } from '../../types/api';
 import {
   getCollections, createCollection, updateCollection, deleteCollection
 } from '../../api/endpoints';
-import { Plus, Edit2, Trash2, X, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Layers } from 'lucide-react';
+import { SkeletonRow } from '../../components/Skeleton';
+import toast from 'react-hot-toast';
 
 export default function AdminCollections() {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -71,13 +73,13 @@ export default function AdminCollections() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this collection?')) return;
+    if (!window.confirm('Delete this collection?')) return;
     try {
       await deleteCollection(id);
       setCollections(prev => prev.filter(c => c.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete collection.');
+      toast.success('Collection deleted.');
+    } catch {
+      toast.error('Failed to delete collection.');
     }
   };
 
@@ -99,10 +101,10 @@ export default function AdminCollections() {
       }
       
       handleCloseModal();
-      await fetchData(); // Refresh grid
-    } catch (err) {
-      console.error(err);
-      alert('Failed to save collection.');
+      toast.success(editingCollection ? 'Collection updated.' : 'Collection created.');
+      await fetchData();
+    } catch {
+      toast.error('Failed to save collection.');
     } finally {
       setSaving(false);
     }
@@ -110,9 +112,8 @@ export default function AdminCollections() {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-        <p className="text-white/50 text-sm font-bold uppercase tracking-widest">Loading Drops</p>
+      <div className="space-y-2">
+        {[...Array(4)].map((_, i) => <SkeletonRow key={i} cols={5} />)}
       </div>
     );
   }
@@ -209,8 +210,12 @@ export default function AdminCollections() {
               ))}
               {collections.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-white/30 italic">
-                    No collections found in the database.
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Layers className="w-12 h-12 text-white/10" />
+                      <p className="text-white/30 font-bold uppercase tracking-widest text-sm">No collections created</p>
+                      <p className="text-white/20 text-xs">Create your first seasonal drop or collaboration.</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -308,7 +313,7 @@ export default function AdminCollections() {
                 disabled={saving}
                 className="px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider bg-brand-primary text-black hover:brightness-110 disabled:opacity-50 transition-all flex items-center gap-2"
               >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving && <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
                 {editingCollection ? 'Save Changes' : 'Create Collection'}
               </button>
             </div>

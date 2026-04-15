@@ -190,6 +190,27 @@ export const getPaymentMethods = async () => {
   return response.data;
 };
 
+// Admin order management
+export const getAdminDashboardStats = async () => {
+  const response = await axiosInstance.get('/orders/admin/stats');
+  return response.data as {
+    totalRevenue: number;
+    pendingOrdersCount: number;
+    totalProducts: number;
+    totalUsers: number;
+  };
+};
+
+export const getAllOrders = async () => {
+  const response = await axiosInstance.get('/orders/admin/all');
+  return response.data;
+};
+
+export const updateOrderStatus = async (id: string, status: string) => {
+  const response = await axiosInstance.put(`/orders/${id}/status`, { status });
+  return response.data;
+};
+
 // ---------------------------------------------------------------------------
 // NEWSLETTER
 // ---------------------------------------------------------------------------

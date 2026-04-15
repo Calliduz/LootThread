@@ -3,15 +3,16 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard, Package, Layers, Palette, FileText,
-  LogOut, Menu, X, ChevronRight,
+  LogOut, Menu, X, ChevronRight, ShoppingCart,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { to: '/admin',              label: 'Dashboard',      icon: LayoutDashboard, end: true },
-  { to: '/admin/products',     label: 'Products',       icon: Package },
-  { to: '/admin/collections',  label: 'Collections',    icon: Layers },
-  { to: '/admin/artists',      label: 'Artists',        icon: Palette },
-  { to: '/admin/cms',          label: 'Storefront CMS', icon: FileText },
+  { to: '/admin/orders',       label: 'Orders',          icon: ShoppingCart },
+  { to: '/admin/products',     label: 'Products',        icon: Package },
+  { to: '/admin/collections',  label: 'Collections',     icon: Layers },
+  { to: '/admin/artists',      label: 'Artists',         icon: Palette },
+  { to: '/admin/cms',          label: 'Storefront CMS',  icon: FileText },
 ];
 
 export default function AdminLayout() {

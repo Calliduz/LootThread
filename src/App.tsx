@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import Storefront from './Storefront';
@@ -10,6 +11,8 @@ import AdminProducts from './pages/admin/AdminProducts';
 import AdminArtists from './pages/admin/AdminArtists';
 import AdminCollections from './pages/admin/AdminCollections';
 import AdminCMS from './pages/admin/AdminCMS';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminOrders from './pages/admin/AdminOrders';
 
 // Storefront Pages
 import Login from './pages/storefront/Login';
@@ -20,19 +23,6 @@ import Account from './pages/storefront/Account';
 import Checkout from './pages/storefront/Checkout';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
-
-// Placeholder components for Admin pages (to be built fully in later phases)
-const DashboardPlaceholder = () => (
-  <div className="h-full flex items-center justify-center border border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
-    <div className="text-center space-y-2">
-      <h2 className="text-xl font-bold uppercase tracking-widest text-brand-primary">Dashboard Overview</h2>
-      <p className="text-sm text-white/40">Aggregated stats will be rendered here.</p>
-    </div>
-  </div>
-);
-
-
-
 
 
 
@@ -51,6 +41,14 @@ export default function App() {
     <AuthProvider>
       <CartProvider>
       <BrowserRouter>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            style: { background: '#0f0f1a', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.05em' },
+            success: { iconTheme: { primary: '#00ffcc', secondary: '#000' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          }}
+        />
         <Routes>
           {/* Public Storefront Route */}
           <Route path="/" element={<Storefront />} />
@@ -93,11 +91,12 @@ export default function App() {
             }
           >
             {/* Nested routes mapped into AdminLayout's <Outlet /> */}
-            <Route index element={<DashboardPlaceholder />} />
+            <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="collections" element={<AdminCollections />} />
             <Route path="artists" element={<AdminArtists />} />
             <Route path="cms" element={<AdminCMS />} />
+            <Route path="orders" element={<AdminOrders />} />
           </Route>
 
           {/* Catch-all */}

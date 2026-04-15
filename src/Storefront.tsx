@@ -12,14 +12,14 @@ import Marquee from './components/storefront/Marquee';
 import Footer from './components/storefront/Footer';
 import Newsletter from './components/storefront/Newsletter';
 import ProductDetail from './components/ProductDetail';
-import ArtistDashboard from './components/ArtistDashboard';
+
 import { Product } from './types/api';
 import LoginModal from './components/LoginModal';
 import { useProducts } from './hooks/useApi';
 import { useCart } from './contexts/CartContext';
 
 export default function Storefront() {
-  const [view, setView] = useState<'marketplace' | 'dashboard' | 'artists' | 'product-detail'>('marketplace');
+  const [view, setView] = useState<'marketplace' | 'artists' | 'product-detail'>('marketplace');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { data: fetchedProducts, isLoading, isError } = useProducts();
   const [filter, setFilter] = useState<'all' | 'skin' | 'attachment'>('all');
@@ -170,8 +170,6 @@ export default function Storefront() {
                 </div>
               </section>
             </>
-          ) : view === 'dashboard' ? (
-            <ArtistDashboard />
           ) : view === 'artists' ? (
             <ArtistsList />
           ) : selectedProduct ? (

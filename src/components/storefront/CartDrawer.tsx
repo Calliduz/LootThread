@@ -62,19 +62,23 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             {/* Items */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
               {cartItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-16">
-                  <div className="w-16 h-16 bg-white/[0.03] rounded-2xl border border-white/5 flex items-center justify-center">
-                    <ShoppingCart className="w-7 h-7 text-white/20" />
+                <div className="flex flex-col items-center justify-center h-full text-center space-y-5 py-16">
+                  {/* Glowing cart icon */}
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-2xl bg-brand-primary/20 blur-xl scale-150" />
+                    <div className="relative w-20 h-20 bg-brand-primary/5 rounded-2xl border border-brand-primary/20 flex items-center justify-center shadow-[0_0_30px_rgba(0,255,204,0.08)]">
+                      <ShoppingCart className="w-9 h-9 text-brand-primary/40" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-white/40 font-bold uppercase tracking-widest text-xs">No Items Yet</p>
-                    <p className="text-white/20 text-[10px] mt-1">Add products from the marketplace</p>
+                  <div className="space-y-2">
+                    <p className="text-white font-black uppercase tracking-widest text-sm">Loadout Empty</p>
+                    <p className="text-white/30 text-[11px] font-mono max-w-[200px]">Your cart has no active items. Browse the marketplace to add drops.</p>
                   </div>
                   <button
                     onClick={onClose}
-                    className="mt-2 text-xs text-brand-primary hover:underline font-bold uppercase tracking-wider"
+                    className="mt-1 flex items-center gap-2 bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/20 text-brand-primary px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
                   >
-                    Browse Market →
+                    <Zap className="w-3 h-3" /> Browse Market
                   </button>
                 </div>
               ) : (

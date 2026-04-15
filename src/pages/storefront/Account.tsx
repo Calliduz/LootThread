@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getMyOrders } from '../../api/endpoints';
-import { LogOut, User as UserIcon, Package, Settings, ShieldAlert, Loader2, ShoppingBag, CheckCircle } from 'lucide-react';
+import { LogOut, User as UserIcon, Package, Settings, ShieldAlert, ShoppingBag, CheckCircle } from 'lucide-react';
+import { Skeleton } from '../../components/Skeleton';
 
 interface OrderItem {
   name: string;
@@ -109,8 +110,8 @@ export default function Account() {
               </div>
 
               {loadingOrders ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
+                <div className="space-y-3 py-4">
+                  {[...Array(3)].map((_, i) => <Skeleton key={i} height={72} />)}
                 </div>
               ) : orders.length === 0 ? (
                 <div className="border border-dashed border-white/10 rounded-2xl p-12 flex flex-col items-center justify-center text-center space-y-4 bg-white/[0.02]">

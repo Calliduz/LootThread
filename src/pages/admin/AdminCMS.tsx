@@ -3,7 +3,9 @@ import { CMSContent } from '../../types/api';
 import {
   getAllCMS, createCMS, updateCMS, deleteCMS
 } from '../../api/endpoints';
-import { Plus, Edit2, Trash2, X, Loader2, Code, AlignLeft, Image as ImageIcon, Braces } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Code, AlignLeft, Image as ImageIcon, Braces, FileText } from 'lucide-react';
+import { SkeletonRow } from '../../components/Skeleton';
+import toast from 'react-hot-toast';
 
 export default function AdminCMS() {
   const [cmsList, setCmsList] = useState<CMSContent[]>([]);
@@ -81,13 +83,13 @@ export default function AdminCMS() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this CMS content block?')) return;
+    if (!window.confirm('Delete this CMS content block?')) return;
     try {
       await deleteCMS(id);
       setCmsList(prev => prev.filter(c => c.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete CMS content.');
+      toast.success('CMS block deleted.');
+    } catch {
+      toast.error('Failed to delete CMS content.');
     }
   };
 
@@ -100,8 +102,8 @@ export default function AdminCMS() {
     if (formData.type === 'json' || formData.type === 'array') {
       try {
         processedValue = JSON.parse(formData.value);
-      } catch (err) {
-        alert('Invalid JSON format. Please check your syntax and try again.');
+      } catch {
+        toast.error('Invalid JSON format. Check your syntax and try again.');
         return;
       }
     }
@@ -122,10 +124,10 @@ export default function AdminCMS() {
       }
       
       handleCloseModal();
-      await fetchData(); // Refresh grid
-    } catch (err) {
-      console.error(err);
-      alert('Failed to save CMS block.');
+      toast.success(editingCms ? 'CMS block updated.' : 'CMS block created.');
+      await fetchData();
+    } catch {
+      toast.error('Failed to save CMS block.');
     } finally {
       setSaving(false);
     }
@@ -142,9 +144,8 @@ export default function AdminCMS() {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-        <p className="text-white/50 text-sm font-bold uppercase tracking-widest">Loading CMS Engine</p>
+      <div className="space-y-2">
+        {[...Array(4)].map((_, i) => <SkeletonRow key={i} cols={5} />)}
       </div>
     );
   }
@@ -255,8 +256,12 @@ export default function AdminCMS() {
               })}
               {cmsList.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-white/30 italic">
-                    No CMS configurations found in the database.
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <FileText className="w-12 h-12 text-white/10" />
+                      <p className="text-white/30 font-bold uppercase tracking-widest text-sm">No CMS blocks configured</p>
+                      <p className="text-white/20 text-xs">Create your first content key for the storefront.</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -366,7 +371,7 @@ export default function AdminCMS() {
                 disabled={saving}
                 className="px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider bg-brand-primary text-black hover:brightness-110 disabled:opacity-50 transition-all flex items-center gap-2"
               >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving && <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
                 {editingCms ? 'Save Changes' : 'Create Record'}
               </button>
             </div>

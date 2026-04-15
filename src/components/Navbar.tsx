@@ -39,7 +39,7 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
         <button onClick={() => onNavigate('attachments')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Attachments</button>
         <button onClick={() => onNavigate('artists')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Artists</button>
         {isAuthenticated && user?.role === 'admin' && (
-          <button onClick={() => onNavigate('dashboard')} className="text-brand-accent hover:text-white hover:tracking-[0.3em] transition-all duration-300">Dashboard</button>
+          <button onClick={() => navigate('/admin')} className="text-brand-accent hover:text-white hover:tracking-[0.3em] transition-all duration-300">Admin Panel</button>
         )}
       </div>
 
@@ -77,7 +77,7 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
               </button>
             </div>
             <div 
-              onClick={() => navigate('/account')}
+              onClick={() => navigate(user?.role === 'admin' ? '/admin' : '/account')}
               className="w-10 h-10 rounded-xl border-2 border-white/5 hover:border-brand-primary/50 transition-all cursor-pointer overflow-hidden bg-white/5 flex items-center justify-center p-0.5"
             >
               <img 
@@ -157,10 +157,10 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
                 </button>
                 {isAuthenticated && user?.role === 'admin' ? (
                   <button 
-                    onClick={() => { onNavigate('dashboard'); setIsMenuOpen(false); }} 
+                    onClick={() => { navigate('/admin'); setIsMenuOpen(false); }} 
                     className="text-left text-brand-accent hover:text-white transition-colors flex items-center justify-between"
                   >
-                    Dashboard <ArrowRight className="w-4 h-4" />
+                    Admin Panel <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : isAuthenticated ? (
                   <button 

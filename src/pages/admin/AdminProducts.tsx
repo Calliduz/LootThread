@@ -4,7 +4,9 @@ import {
   getProducts, getArtists, getCollections,
   createProduct, updateProduct, deleteProduct
 } from '../../api/endpoints';
-import { Plus, Edit2, Trash2, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { SkeletonRow } from '../../components/Skeleton';
+import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -94,13 +96,13 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    if (!window.confirm('Delete this product? This action cannot be undone.')) return;
     try {
       await deleteProduct(id);
       setProducts(prev => prev.filter(p => p.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete product.');
+      toast.success('Product deleted.');
+    } catch {
+      toast.error('Failed to delete product.');
     }
   };
 
@@ -128,10 +130,10 @@ export default function AdminProducts() {
       }
       
       handleCloseModal();
-      await fetchData(); // Refresh data grid
-    } catch (err) {
-      console.error(err);
-      alert('Failed to save product.');
+      toast.success(editingProduct ? 'Product updated.' : 'Product created.');
+      await fetchData();
+    } catch {
+      toast.error('Failed to save product.');
     } finally {
       setSaving(false);
     }
@@ -139,9 +141,8 @@ export default function AdminProducts() {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-        <p className="text-white/50 text-sm font-bold uppercase tracking-widest">Loading Catalog</p>
+      <div className="space-y-2">
+        {[...Array(6)].map((_, i) => <SkeletonRow key={i} cols={7} />)}
       </div>
     );
   }
@@ -249,8 +250,12 @@ export default function AdminProducts() {
               })}
               {products.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-white/30 italic">
-                    No products found in the catalog.
+                  <td colSpan={7} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <ImageIcon className="w-12 h-12 text-white/10" />
+                      <p className="text-white/30 font-bold uppercase tracking-widest text-sm">No products in catalog</p>
+                      <p className="text-white/20 text-xs">Click "New Product" to add your first drop.</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -415,7 +420,7 @@ export default function AdminProducts() {
                 disabled={saving}
                 className="px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider bg-brand-primary text-black hover:brightness-110 disabled:opacity-50 transition-all flex items-center gap-2"
               >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving && <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
                 {editingProduct ? 'Save Changes' : 'Create Product'}
               </button>
             </div>

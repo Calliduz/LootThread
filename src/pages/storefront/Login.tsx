@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Loader2, Github, Mail } from 'lucide-react';
+import { Github, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -15,9 +16,11 @@ export default function Login() {
     e.preventDefault();
     setError('');
     try {
-      await login({ email, password });
-      const origin = (location.state as any)?.from?.pathname || '/account';
-      navigate(origin);
+      const data = await login({ email, password });
+      // Role-aware redirect: admins go to /admin, customers go to /account
+      const fallback = data.user.role === 'admin' ? '/admin' : '/account';
+      const origin = (location.state as any)?.from?.pathname;
+      navigate(origin && origin !== '/login' ? origin : fallback);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }
@@ -30,6 +33,10 @@ export default function Login() {
       <div className="absolute inset-0 bg-gradient-to-b from-bg-dark/80 via-bg-dark to-bg-dark pointer-events-none" />
 
       <div className="max-w-md w-full bg-bg-card border border-white/10 rounded-2xl p-8 relative z-10 shadow-2xl space-y-8">
+        {/* Back to Home */}
+        <Link to="/" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/30 hover:text-brand-primary transition-colors">
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+        </Link>
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-black uppercase italic tracking-tighter text-white">
             Access <span className="text-brand-primary">Terminal</span>
@@ -60,13 +67,24 @@ export default function Login() {
               <label className="text-xs font-bold uppercase tracking-widest text-white/60">Passcode</label>
               <Link to="/forgot-password" className="text-xs text-brand-primary hover:underline font-bold">Forgot?</Link>
             </div>
-            <input 
-              type="password" 
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-primary/50 transition-colors"
-              required
-            />
+            <div className="relative">
+              <input 
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white focus:outline-none focus:border-brand-primary/50 transition-colors"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-brand-primary transition-colors"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <button 
@@ -74,7 +92,12 @@ export default function Login() {
             disabled={isLoading}
             className="w-full bg-brand-primary text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Initialize Session'}
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                Authenticating...
+              </span>
+            ) : 'Initialize Session'}
           </button>
         </form>
 
