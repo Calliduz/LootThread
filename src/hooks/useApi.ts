@@ -8,7 +8,7 @@ import { Product, CreateOrderRequest } from '../types/api';
 export const useProducts = () => {
   return useQuery({
     queryKey: ['products'],
-    queryFn: api.getProducts,
+    queryFn: () => api.getProducts(),
   });
 };
 
@@ -69,7 +69,7 @@ export const useLogin = () => {
     mutationFn: (credentials: any) => api.login(credentials),
     onSuccess: (data) => {
       localStorage.setItem('token', data.token);
-      localStorage.setItem('artist', JSON.stringify(data.artist));
+      localStorage.setItem('user', JSON.stringify(data.user));
     },
   });
 };

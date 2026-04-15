@@ -3,29 +3,78 @@
  * These types are shared between the LootThread frontend and Express backend.
  */
 
+export type ProductType = 'skin' | 'attachment' | 'apparel' | 'individual';
+
 export interface Product {
   id: string;
   name: string;
+  title?: string;
   description: string;
   price: number;
-  category: 'skin' | 'attachment';
-  subCategory: string;
-  images: string[];
-  inventory: number;
-  tags: string[];
+  type: ProductType;
+  /** @deprecated Use `type` — kept for backward compat with old product cards */
+  category?: 'skin' | 'attachment';
+  subCategory?: string;
+  imageUrl?: string;
+  images?: string[];
+  stockQuantity?: number;
+  inventory?: number;
+  tags?: string[];
   artistId?: string;
+  collectionId?: string;
   createdAt: Date | string;
 }
 
 export interface Artist {
   id: string;
   name: string;
-  bio: string;
-  avatar: string;
-  salesCount: string | number; // Frontend currently handles as "12K+"
-  rating: number;
+  bio?: string;
+  avatar?: string;
+  imageUrl?: string;
+  salesCount?: string | number;
+  rating?: number;
   totalRevenue?: number;
   activeSkinsCount?: number;
+  isActive?: boolean;
+}
+
+export interface Collection {
+  id: string;
+  name: string;
+  description?: string;
+  releaseDate?: string;
+  isActive?: boolean;
+}
+
+export interface CMSContent {
+  id: string;
+  key: string;
+  type: 'text' | 'json' | 'image' | 'array';
+  value?: any;
+  isActive?: boolean;
+}
+
+/**
+ * AUTH
+ */
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'customer';
+  avatarUrl?: string;
+  isActive?: boolean;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
 }
 
 /**
