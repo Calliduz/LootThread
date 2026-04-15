@@ -8,7 +8,9 @@ import Quiz from './components/Quiz';
 import Carousel from './components/Carousel';
 import CartDrawer from './components/CartDrawer';
 import ArtistsList from './components/ArtistsList';
-import Marquee from './components/Marquee';
+import Marquee from './components/storefront/Marquee';
+import Footer from './components/storefront/Footer';
+import Newsletter from './components/storefront/Newsletter';
 import ProductDetail from './components/ProductDetail';
 import Checkout from './components/Checkout';
 import ArtistDashboard from './components/ArtistDashboard';
@@ -98,10 +100,7 @@ export default function Storefront() {
         onNavigate={(v) => v === 'dashboard' ? (localStorage.getItem('token') ? handleNavigate('dashboard') : setIsLoginOpen(true)) : handleNavigate(v)}
       />
 
-      <Marquee 
-        text="MARKETPLACE • NEW DROPS • SEASON 01 • LIMITED EDITION •" 
-        className="sticky top-[73px] z-40 cursor-pointer hover:bg-white/10 transition-colors"
-      />
+      <Marquee />
 
       {isError ? (
         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-bg-dark">
@@ -207,12 +206,8 @@ export default function Storefront() {
         </main>
       )}
 
-      <footer className="px-6 lg:px-12 py-12 border-t border-white/5 bg-bg-card">
-        <div className="flex justify-between items-center">
-          <span className="text-xl font-bold uppercase italic">Loot<span className="text-brand-primary">Thread</span></span>
-          <p className="text-[10px] font-mono text-white/20">© 2026 LOOT THREAD. ALL RIGHTS RESERVED.</p>
-        </div>
-      </footer>
+      <Newsletter />
+      <Footer />
 
       <Quiz isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onSuccess={() => handleNavigate('dashboard')} />

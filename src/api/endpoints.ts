@@ -169,3 +169,11 @@ export const getPaymentMethods = async () => {
   const response = await axiosInstance.get<any[]>('/payment-methods');
   return response.data;
 };
+
+// ---------------------------------------------------------------------------
+// NEWSLETTER
+// ---------------------------------------------------------------------------
+export const subscribeNewsletter = async (email: string) => {
+  const response = await axiosInstance.post('/newsletter/subscribe', { email });
+  return response.data;
+};
