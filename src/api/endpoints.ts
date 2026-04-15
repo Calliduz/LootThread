@@ -28,6 +28,11 @@ export const resetPassword = async (data: { email: string; otp: string; newPassw
   return response.data;
 };
 
+export const updatePassword = async (data: { currentPassword: string; newPassword: string }) => {
+  const response = await axiosInstance.put('/auth/update-password', data);
+  return response.data;
+};
+
 // ---------------------------------------------------------------------------
 // PRODUCTS
 // ---------------------------------------------------------------------------

@@ -20,6 +20,7 @@ import Register from './pages/storefront/Register';
 import ForgotPassword from './pages/storefront/ForgotPassword';
 import ResetPassword from './pages/storefront/ResetPassword';
 import Account from './pages/storefront/Account';
+import OAuthCallback from './pages/storefront/OAuthCallback';
 import Checkout from './pages/storefront/Checkout';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
 
           {/* Protected Customer Routes */}
           <Route 

@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getMyOrders } from '../../api/endpoints';
-import { LogOut, User as UserIcon, Package, Settings, ShieldAlert, ShoppingBag, CheckCircle } from 'lucide-react';
+import { getMyOrders, updatePassword } from '../../api/endpoints';
+import toast from 'react-hot-toast';
+import {
+  LogOut, User as UserIcon, Package, Settings, ShieldAlert,
+  ShoppingBag, CheckCircle, KeyRound, ChevronDown, Eye, EyeOff,
+} from 'lucide-react';
 import { Skeleton } from '../../components/Skeleton';
 
 interface OrderItem {
@@ -28,16 +32,50 @@ export default function Account() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
+  // --- Change Password State ---
+  const [showPwForm, setShowPwForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [savingPw, setSavingPw] = useState(false);
+
   useEffect(() => {
     getMyOrders()
       .then(data => setOrders(data))
-      .catch(() => {}) // silently fail — order history is non-critical
+      .catch(() => {})
       .finally(() => setLoadingOrders(false));
   }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters.');
+      return;
+    }
+    setSavingPw(true);
+    try {
+      await updatePassword({ currentPassword, newPassword });
+      toast.success('Passcode updated successfully!');
+      setShowPwForm(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to update password.');
+    } finally {
+      setSavingPw(false);
+    }
   };
 
   const statusColor = (status: string) => {
@@ -129,7 +167,6 @@ export default function Account() {
                 <div className="space-y-4">
                   {orders.map(order => (
                     <div key={order._id} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-4">
-                      {/* Order Header */}
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
@@ -152,7 +189,6 @@ export default function Account() {
                         </div>
                       </div>
 
-                      {/* Items */}
                       <div className="space-y-2 border-t border-white/5 pt-4">
                         {order.items.map((item, idx) => (
                           <div key={idx} className="flex items-center gap-3">
@@ -183,10 +219,89 @@ export default function Account() {
                 <h2 className="text-sm font-black uppercase italic tracking-widest text-white">Security & Auth</h2>
               </div>
               <div className="space-y-4">
-                <button className="w-full text-left bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-xl p-4 transition-colors">
-                  <div className="text-xs font-bold uppercase tracking-widest text-white mb-1">Update Passcode</div>
-                  <div className="text-[10px] text-white/40 uppercase tracking-wider">Change your entry key</div>
-                </button>
+
+                {/* Update Passcode – Expandable */}
+                <div className="bg-white/[0.03] border border-white/5 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setShowPwForm(v => !v)}
+                    className="w-full text-left p-4 hover:bg-white/[0.03] transition-colors flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-widest text-white mb-1 flex items-center gap-2">
+                        <KeyRound className="w-3.5 h-3.5 text-brand-primary" />
+                        Update Passcode
+                      </div>
+                      <div className="text-[10px] text-white/40 uppercase tracking-wider">Change your entry key</div>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${showPwForm ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showPwForm && (
+                    <form onSubmit={handlePasswordUpdate} className="px-4 pb-4 space-y-3 border-t border-white/5 pt-4">
+                      {/* Current Password */}
+                      <div className="relative">
+                        <input
+                          type={showCurrent ? 'text' : 'password'}
+                          placeholder="Current passcode"
+                          value={currentPassword}
+                          onChange={e => setCurrentPassword(e.target.value)}
+                          required
+                          className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white pr-9 outline-none focus:border-brand-primary/40 placeholder-white/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrent(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-brand-primary transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showCurrent ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+
+                      {/* New Password */}
+                      <div className="relative">
+                        <input
+                          type={showNew ? 'text' : 'password'}
+                          placeholder="New passcode (min 8 chars)"
+                          value={newPassword}
+                          onChange={e => setNewPassword(e.target.value)}
+                          required
+                          minLength={8}
+                          className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white pr-9 outline-none focus:border-brand-primary/40 placeholder-white/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNew(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-brand-primary transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showNew ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+
+                      {/* Confirm Password */}
+                      <input
+                        type="password"
+                        placeholder="Confirm new passcode"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        required
+                        className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white outline-none focus:border-brand-primary/40 placeholder-white/20"
+                      />
+
+                      <button
+                        type="submit"
+                        disabled={savingPw}
+                        className="w-full bg-brand-primary text-black text-xs font-black uppercase tracking-widest py-2.5 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {savingPw ? (
+                          <><span className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Saving...</>
+                        ) : 'Update Passcode'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+
                 <button className="w-full text-left bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-xl p-4 transition-colors">
                   <div className="text-xs font-bold uppercase tracking-widest text-white mb-1">Link Connections</div>
                   <div className="text-[10px] text-white/40 uppercase tracking-wider">Google / GitHub settings</div>

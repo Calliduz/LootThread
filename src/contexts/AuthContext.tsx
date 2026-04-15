@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import { User, LoginCredentials, AuthResponse } from '../types/api';
 import { login as loginApi, register as registerApi } from '../api/endpoints';
 
@@ -13,6 +14,7 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   register: (data: { name: string; email: string; password: string }) => Promise<void>;
+  loginWithToken: (token: string) => void;
   logout: () => void;
 }
 
@@ -34,7 +36,6 @@ function loadPersistedAuth(): { user: User | null; token: string | null } {
 function persistAuth(user: User | null, token: string | null) {
   if (user && token) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, token }));
-    // Also set bare token for the axios interceptor
     localStorage.setItem('token', token);
   } else {
     localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -54,7 +55,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   });
 
-  // Listen for 401 events from the axios interceptor
   useEffect(() => {
     const handler = () => {
       persistAuth(null, null);
@@ -104,6 +104,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  /**
+   * loginWithToken — used after OAuth redirect.
+   * Decodes the JWT payload to extract the basic user info,
+   * then persists and sets auth state. A full profile fetch
+   * can be added here if needed in the future.
+   */
+  const loginWithToken = useCallback((token: string) => {
+    try {
+      const decoded = jwtDecode<{ id: string; role: string }>(token);
+      // Build a minimal user object from the JWT payload
+      const user: User = {
+        id:    decoded.id,
+        name:  '', // filled from profile fetch below if needed
+        email: '',
+        role:  decoded.role as 'admin' | 'customer',
+      };
+      persistAuth(user, token);
+      setState({
+        user,
+        token,
+        isAuthenticated: true,
+        isAdmin: decoded.role === 'admin',
+        isLoading: false,
+      });
+    } catch (err) {
+      console.error('[loginWithToken] Failed to decode token', err);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     persistAuth(null, null);
     setState({
@@ -113,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout }}>
+    <AuthContext.Provider value={{ ...state, login, register, loginWithToken, logout }}>
       {children}
     </AuthContext.Provider>
   );
