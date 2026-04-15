@@ -22,6 +22,7 @@ import ResetPassword from './pages/storefront/ResetPassword';
 import Account from './pages/storefront/Account';
 import OAuthCallback from './pages/storefront/OAuthCallback';
 import Checkout from './pages/storefront/Checkout';
+import Receipt from './pages/storefront/Receipt';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 
@@ -77,6 +78,14 @@ export default function App() {
             element={
               <CustomerRoute>
                 <Checkout />
+              </CustomerRoute>
+            }
+          />
+          <Route 
+            path="/receipt/:id" 
+            element={
+              <CustomerRoute>
+                <Receipt />
               </CustomerRoute>
             }
           />

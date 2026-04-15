@@ -8,6 +8,7 @@ interface Stats {
   pendingOrdersCount: number;
   totalProducts: number;
   totalUsers: number;
+  recentOrders: any[];
 }
 
 interface StatCardProps {
@@ -137,6 +138,69 @@ export default function AdminDashboard() {
           icon={Users}
           sub="Registered accounts"
         />
+      </div>
+
+      {/* Recent Transactions Table */}
+      <div className="bg-bg-card border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center">
+              <Clock className="w-4 h-4 text-brand-primary" />
+            </div>
+            <h2 className="text-sm font-black uppercase tracking-widest text-white">Recent Transactions</h2>
+          </div>
+          <a href="/admin/orders" className="text-[10px] font-black uppercase tracking-widest text-brand-primary hover:underline">View All Orders →</a>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-white/[0.02]">
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Order ID</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Customer</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Total</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {stats?.recentOrders?.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-xs text-white/20 uppercase font-bold tracking-widest">No transmissions logged</td>
+                </tr>
+              ) : (
+                stats?.recentOrders.map((order) => (
+                  <tr key={order._id} className="group hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4">
+                      <span className="text-[11px] font-mono text-white/60 group-hover:text-brand-primary transition-colors">#{order._id.slice(-8).toUpperCase()}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-white">{order.userId?.name || 'Guest'}</span>
+                        <span className="text-[10px] text-white/30 font-mono">{order.userId?.email || 'N/A'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-black text-brand-primary tracking-tight">${order.totalAmount.toFixed(2)}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border shadow-[0_0_10px_rgba(0,0,0,0.5)] ${
+                        order.status === 'completed' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                        order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                        'bg-brand-primary/10 text-brand-primary border-brand-primary/20'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-[10px] font-mono text-white/30">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Quick Actions */}

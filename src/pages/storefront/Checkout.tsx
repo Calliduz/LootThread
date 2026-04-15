@@ -188,10 +188,11 @@ function CheckoutForm({ savedAddresses, cartSnapshot }: { savedAddresses: Delive
         });
 
         setPaidTotal(cartTotal);
-        setOrderId(order?.orderId || order?._id || '');
+        const finalId = order?.orderId || order?._id || '';
+        setOrderId(finalId);
         toast.success('🎉 Purchase complete! Check your order history.');
         clearCart();
-        setSuccess(true);
+        navigate(`/receipt/${finalId}`);
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Purchase failed. Please try again.';

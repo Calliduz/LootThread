@@ -194,7 +194,6 @@ export const createOrder = async (data: {
   items: Array<{ productId: string; name: string; price: number; imageUrl?: string; quantity: number }>;
   totalAmount: number;
   deliveryAddress?: string;
-  gameTag?: string;
   paymentMethod?: string;
 }) => {
   const response = await axiosInstance.post('/orders', data);
@@ -226,6 +225,7 @@ export const getAdminDashboardStats = async () => {
     pendingOrdersCount: number;
     totalProducts: number;
     totalUsers: number;
+    recentOrders: any[];
   };
 };
 
