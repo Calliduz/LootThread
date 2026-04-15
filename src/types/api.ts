@@ -65,6 +65,16 @@ export interface User {
   role: 'admin' | 'customer';
   avatarUrl?: string;
   isActive?: boolean;
+  deliveryAddresses?: {
+    id?: string;
+    _id?: string;
+    label: string;
+    street: string;
+    city: string;
+    zip: string;
+    country: string;
+    isDefault: boolean;
+  }[];
 }
 
 export interface LoginCredentials {

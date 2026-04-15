@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getMyOrders, updatePassword } from '../../api/endpoints';
+import { getMyOrders, updatePassword, getProfile, updateAddresses } from '../../api/endpoints';
 import { useCart } from '../../contexts/CartContext';
 import Navbar from '../../components/Navbar';
 import CartDrawer from '../../components/storefront/CartDrawer';
@@ -45,11 +45,21 @@ export default function Account() {
   const [showNew, setShowNew] = useState(false);
   const [savingPw, setSavingPw] = useState(false);
 
+  // --- Address State ---
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [newAddr, setNewAddr] = useState({ label: '', street: '', city: '', zip: '', country: '' });
+  const [savingAddr, setSavingAddr] = useState(false);
+
   useEffect(() => {
     getMyOrders()
       .then(data => setOrders(data))
       .catch(() => {})
       .finally(() => setLoadingOrders(false));
+
+    getProfile().then(data => {
+      if (data.deliveryAddresses) setAddresses(data.deliveryAddresses);
+    }).catch(console.error);
   }, []);
 
   const handleLogout = () => {
@@ -79,6 +89,33 @@ export default function Account() {
       toast.error(err?.response?.data?.message || 'Failed to update password.');
     } finally {
       setSavingPw(false);
+    }
+  };
+
+  const handleAddAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingAddr(true);
+    const updated = [...addresses, { ...newAddr, isDefault: addresses.length === 0 }];
+    try {
+      await updateAddresses(updated);
+      setAddresses(updated);
+      setNewAddr({ label: '', street: '', city: '', zip: '', country: '' });
+      toast.success('Address added successfully!');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to add address.');
+    } finally {
+      setSavingAddr(false);
+    }
+  };
+
+  const handleRemoveAddress = async (index: number) => {
+    const updated = addresses.filter((_, i) => i !== index);
+    try {
+      await updateAddresses(updated);
+      setAddresses(updated);
+      toast.success('Address removed.');
+    } catch (err: any) {
+      toast.error('Failed to remove address.');
     }
   };
 
@@ -325,10 +362,58 @@ export default function Account() {
                   )}
                 </div>
 
-                <button className="w-full text-left bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-xl p-4 transition-colors">
-                  <div className="text-xs font-bold uppercase tracking-widest text-white mb-1">Link Connections</div>
-                  <div className="text-[10px] text-white/40 uppercase tracking-wider">Google / GitHub settings</div>
-                </button>
+                {/* Address Book */}
+                <div className="bg-white/[0.03] border border-white/5 rounded-xl overflow-hidden mt-4">
+                  <button
+                    onClick={() => setShowAddressForm(v => !v)}
+                    className="w-full text-left p-4 hover:bg-white/[0.03] transition-colors flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-widest text-white mb-1 flex items-center gap-2">
+                        <Package className="w-3.5 h-3.5 text-brand-primary" />
+                        Address Book
+                      </div>
+                      <div className="text-[10px] text-white/40 uppercase tracking-wider">Manage delivery addresses</div>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${showAddressForm ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showAddressForm && (
+                    <div className="px-4 pb-4 space-y-4 border-t border-white/5 pt-4">
+                      {addresses.length > 0 ? (
+                        <div className="space-y-2">
+                          {addresses.map((addr, idx) => (
+                            <div key={idx} className="bg-black/30 border border-white/10 rounded-lg p-3 flex justify-between items-start">
+                              <div>
+                                <p className="text-xs font-bold text-white uppercase tracking-widest mb-1">{addr.label}</p>
+                                <p className="text-[10px] text-white/40 font-mono">{addr.street}, {addr.city}, {addr.zip}, {addr.country}</p>
+                              </div>
+                              <button onClick={() => handleRemoveAddress(idx)} className="text-red-400 hover:text-red-300 text-[10px] uppercase font-bold tracking-widest">
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-white/40 text-center py-2">No addresses saved.</p>
+                      )}
+
+                      <form onSubmit={handleAddAddress} className="space-y-3 pt-3 border-t border-white/5">
+                        <input type="text" placeholder="Label (e.g. Home)" value={newAddr.label} onChange={e => setNewAddr({...newAddr, label: e.target.value})} required className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-brand-primary/40 placeholder-white/20" />
+                        <input type="text" placeholder="Street Address" value={newAddr.street} onChange={e => setNewAddr({...newAddr, street: e.target.value})} required className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-brand-primary/40 placeholder-white/20" />
+                        <div className="flex gap-2">
+                          <input type="text" placeholder="City" value={newAddr.city} onChange={e => setNewAddr({...newAddr, city: e.target.value})} required className="w-1/2 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-brand-primary/40 placeholder-white/20" />
+                          <input type="text" placeholder="ZIP" value={newAddr.zip} onChange={e => setNewAddr({...newAddr, zip: e.target.value})} required className="w-1/2 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-brand-primary/40 placeholder-white/20" />
+                        </div>
+                        <input type="text" placeholder="Country" value={newAddr.country} onChange={e => setNewAddr({...newAddr, country: e.target.value})} required className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-brand-primary/40 placeholder-white/20" />
+                        
+                        <button type="submit" disabled={savingAddr} className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest py-2.5 rounded-lg active:scale-[0.98] transition-all disabled:opacity-50 mt-2">
+                          {savingAddr ? 'Adding...' : 'Add Address'}
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

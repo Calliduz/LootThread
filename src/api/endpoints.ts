@@ -33,6 +33,16 @@ export const updatePassword = async (data: { currentPassword: string; newPasswor
   return response.data;
 };
 
+export const getProfile = async () => {
+  const response = await axiosInstance.get('/auth/profile');
+  return response.data;
+};
+
+export const updateAddresses = async (addresses: any[]) => {
+  const response = await axiosInstance.put('/auth/profile/addresses', { addresses });
+  return response.data;
+};
+
 // ---------------------------------------------------------------------------
 // PRODUCTS
 // ---------------------------------------------------------------------------
@@ -178,11 +188,19 @@ export const getRecommendation = async (answers: any) => {
 export const createOrder = async (data: {
   items: Array<{ productId: string; name: string; price: number; imageUrl?: string; quantity: number }>;
   totalAmount: number;
+  deliveryAddress?: string;
   gameTag?: string;
   paymentMethod?: string;
 }) => {
   const response = await axiosInstance.post('/orders', data);
   return response.data;
+};
+
+export const createPaymentIntent = async (data: {
+  items: Array<{ productId: string; quantity: number }>;
+}) => {
+  const response = await axiosInstance.post('/orders/create-payment-intent', data);
+  return response.data as { clientSecret: string };
 };
 
 export const getMyOrders = async () => {
