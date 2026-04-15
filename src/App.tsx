@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import Storefront from './Storefront';
 import AdminLayout from './components/admin/AdminLayout';
 import ProtectedRoute from './components/admin/ProtectedRoute';
@@ -16,6 +17,7 @@ import Register from './pages/storefront/Register';
 import ForgotPassword from './pages/storefront/ForgotPassword';
 import ResetPassword from './pages/storefront/ResetPassword';
 import Account from './pages/storefront/Account';
+import Checkout from './pages/storefront/Checkout';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 
@@ -47,6 +49,7 @@ const CustomerRoute = ({ children }: { children: React.ReactNode }) => {
 export default function App() {
   return (
     <AuthProvider>
+      <CartProvider>
       <BrowserRouter>
         <Routes>
           {/* Public Storefront Route */}
@@ -67,6 +70,14 @@ export default function App() {
                 <Account />
               </CustomerRoute>
             } 
+          />
+          <Route 
+            path="/checkout" 
+            element={
+              <CustomerRoute>
+                <Checkout />
+              </CustomerRoute>
+            }
           />
 
           {/* Admin Login */}
@@ -93,6 +104,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+    </CartProvider>
     </AuthProvider>
   );
 }

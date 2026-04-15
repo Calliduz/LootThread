@@ -34,10 +34,17 @@ export default function Checkout({ items, onComplete, onCancel }: CheckoutProps)
   const total = subtotal + shipping + tax;
 
   const handleProcessOrder = () => {
-    const orderData: CreateOrderRequest = {
-      items: items,
+    type OrderPayload = Parameters<typeof import('../api/endpoints').createOrder>[0];
+    const orderData: OrderPayload = {
+      items: items.map(item => ({
+        productId: item.id || (item as any)._id,
+        name: item.name || (item as any).title || 'Unknown',
+        price: item.price,
+        imageUrl: item.imageUrl || item.images?.[0],
+        quantity: item.quantity,
+      })),
       totalAmount: total,
-      paymentMethod: selectedPayment
+      paymentMethod: selectedPayment,
     };
 
     createOrderMutation.mutate(orderData, {

@@ -1,59 +1,43 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Zap, ArrowRight, Filter, LayoutGrid, List, Sparkles } from 'lucide-react';
+import { Zap, ArrowRight, Sparkles } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
 import ProductSkeleton from './components/ProductSkeleton';
 import Quiz from './components/Quiz';
 import Carousel from './components/Carousel';
-import CartDrawer from './components/CartDrawer';
+import CartDrawer from './components/storefront/CartDrawer';
 import ArtistsList from './components/ArtistsList';
 import Marquee from './components/storefront/Marquee';
 import Footer from './components/storefront/Footer';
 import Newsletter from './components/storefront/Newsletter';
 import ProductDetail from './components/ProductDetail';
-import Checkout from './components/Checkout';
 import ArtistDashboard from './components/ArtistDashboard';
 import { Product } from './types/api';
 import LoginModal from './components/LoginModal';
 import { useProducts } from './hooks/useApi';
+import { useCart } from './contexts/CartContext';
 
 export default function Storefront() {
-  const [view, setView] = useState<'marketplace' | 'dashboard' | 'artists' | 'product-detail' | 'checkout'>('marketplace');
+  const [view, setView] = useState<'marketplace' | 'dashboard' | 'artists' | 'product-detail'>('marketplace');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { data: fetchedProducts, isLoading, isError } = useProducts();
   const [filter, setFilter] = useState<'all' | 'skin' | 'attachment'>('all');
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [globalStats] = useState({ activeArtists: '1,240+', dropsToday: '12', communityMembers: '450K' });
-  const [cart, setCart] = useState<(Product & { quantity: number })[]>([]);
 
+  const { addToCart, cartCount } = useCart();
   const products = fetchedProducts || [];
 
-  const addToCart = (product: Product) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-      }
-      return [...prev, { ...product, quantity: 1 }];
+  const addToCartHandler = (product: Product) => {
+    addToCart({
+      productId: product.id || (product as any)._id,
+      name: product.name || product.title || 'Unknown',
+      price: product.price,
+      imageUrl: product.imageUrl || product.images?.[0],
     });
     setIsCartOpen(true);
-  };
-
-  const updateCartQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
-  };
-
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
   };
 
   const handleNavigate = (newView: string) => {
@@ -83,10 +67,6 @@ export default function Storefront() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleCheckoutComplete = (orderData: any) => {
-    console.log('Order completed:', orderData);
-    setCart([]);
-  };
 
   const filteredProducts = filter === 'all' 
     ? products 
@@ -95,7 +75,7 @@ export default function Storefront() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar 
-        cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} 
+        cartCount={cartCount} 
         onOpenCart={() => setIsCartOpen(true)} 
         onNavigate={(v) => v === 'dashboard' ? (localStorage.getItem('token') ? handleNavigate('dashboard') : setIsLoginOpen(true)) : handleNavigate(v)}
       />
@@ -177,7 +157,7 @@ export default function Storefront() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   <AnimatePresence mode="popLayout">
                     {isLoading ? [...Array(8)].map((_, i) => <ProductSkeleton key={i} />) : 
-                      filteredProducts.map(p => <ProductCard key={p.id || (p as any)._id} product={p} onAddToCart={addToCart} onClick={openProductDetail} />)}
+                      filteredProducts.map(p => <ProductCard key={p.id || (p as any)._id} product={p} onAddToCart={addToCartHandler} onClick={openProductDetail} />)}
                   </AnimatePresence>
                 </div>
               </section>
@@ -194,10 +174,8 @@ export default function Storefront() {
             <ArtistDashboard />
           ) : view === 'artists' ? (
             <ArtistsList />
-          ) : view === 'checkout' ? (
-            <Checkout items={cart} onComplete={handleCheckoutComplete} onCancel={() => handleNavigate('marketplace')} />
           ) : selectedProduct ? (
-            <ProductDetail product={selectedProduct} allProducts={products} onBack={() => handleNavigate('marketplace')} onAddToCart={addToCart} />
+            <ProductDetail product={selectedProduct} allProducts={products} onBack={() => handleNavigate('marketplace')} onAddToCart={addToCartHandler} />
           ) : (
             <div className="flex items-center justify-center h-[60vh]">
               <p className="text-white/40 uppercase font-black">Product Not Found</p>
@@ -211,7 +189,7 @@ export default function Storefront() {
 
       <Quiz isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onSuccess={() => handleNavigate('dashboard')} />
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cart} onUpdateQuantity={updateCartQuantity} onRemove={removeFromCart} onCheckout={() => handleNavigate('checkout')} />
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 }

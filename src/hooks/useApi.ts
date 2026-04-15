@@ -77,9 +77,8 @@ export const useLogin = () => {
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateOrderRequest) => api.createOrder(data),
+    mutationFn: (data: Parameters<typeof api.createOrder>[0]) => api.createOrder(data),
     onSuccess: () => {
-      // Strategic invalidation: refresh dashboard stats when sales occur
       queryClient.invalidateQueries({ queryKey: ['artist-dashboard'] });
     },
   });

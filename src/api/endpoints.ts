@@ -170,8 +170,18 @@ export const getRecommendation = async (answers: any) => {
 // ---------------------------------------------------------------------------
 // ORDERS
 // ---------------------------------------------------------------------------
-export const createOrder = async (data: CreateOrderRequest) => {
-  const response = await axiosInstance.post<OrderResponse>('/orders', data);
+export const createOrder = async (data: {
+  items: Array<{ productId: string; name: string; price: number; imageUrl?: string; quantity: number }>;
+  totalAmount: number;
+  gameTag?: string;
+  paymentMethod?: string;
+}) => {
+  const response = await axiosInstance.post('/orders', data);
+  return response.data;
+};
+
+export const getMyOrders = async () => {
+  const response = await axiosInstance.get('/orders/my');
   return response.data;
 };
 
