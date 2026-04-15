@@ -69,6 +69,7 @@ export default function Footer() {
         <div>© {new Date().getFullYear()} LootThread. All rights reserved.</div>
         <div className="flex gap-6 items-center">
           <a href="/privacy" className="hover:text-brand-primary transition-colors">Privacy Protocol</a>
+          <a href="/terms" className="hover:text-brand-primary transition-colors">Service Terms</a>
           <span>// Terminate Data</span>
         </div>
       </div>

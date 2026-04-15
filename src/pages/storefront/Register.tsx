@@ -7,6 +7,7 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { register, isLoading } = useAuth();
@@ -29,6 +30,10 @@ export default function Register() {
     }
     if (password.length < 6) {
       setError('Passcode must be at least 6 characters.');
+      return;
+    }
+    if (!agreedToTerms) {
+      setError('You must accept the Protocols to join the collective.');
       return;
     }
 
@@ -109,6 +114,19 @@ export default function Register() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+          </div>
+
+          <div className="flex items-start gap-3 px-2 py-2">
+            <input 
+              type="checkbox" 
+              checked={agreedToTerms}
+              onChange={e => setAgreedToTerms(e.target.checked)}
+              id="terms"
+              className="mt-1 w-4 h-4 rounded border-white/10 bg-white/5 text-brand-primary focus:ring-brand-primary/50 transition-all cursor-pointer"
+            />
+            <label htmlFor="terms" className="text-[10px] text-white/40 leading-relaxed font-bold uppercase tracking-wider cursor-pointer select-none">
+              I acknowledge the <Link to="/privacy" className="text-brand-primary hover:underline">Privacy Protocol</Link> and agree to the <Link to="/terms" className="text-brand-primary hover:underline">Service Terms</Link>.
+            </label>
           </div>
 
           <button 
