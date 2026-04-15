@@ -96,7 +96,7 @@ const PrivacyPolicy: React.FC = () => {
           </section>
 
           {/* Section 4 */}
-          <section className="relative group p-8 bg-brand-primary/5 border border-brand-primary/20 rounded-3xl">
+          <section id="deletion" className="relative group p-8 bg-brand-primary/5 border border-brand-primary/20 rounded-3xl">
             <div className="flex items-center gap-3 mb-4">
               <Trash2 className="w-4 h-4 text-brand-primary" />
               <h2 className="text-sm font-black uppercase tracking-widest text-white">04. Data Deletion Protocol</h2>
