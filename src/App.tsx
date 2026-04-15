@@ -53,6 +53,7 @@ export default function App() {
         <Routes>
           {/* Public Storefront Route */}
           <Route path="/" element={<Storefront />} />
+          <Route path="/marketplace" element={<Storefront />} />
 
           {/* Admin Login */}
           {/* Customer Auth Routes */}

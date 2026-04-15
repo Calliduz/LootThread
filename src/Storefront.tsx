@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Zap, ArrowRight, Sparkles } from 'lucide-react';
+import { Zap, ArrowRight, Sparkles, PackageSearch, RefreshCcw } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
 import ProductSkeleton from './components/ProductSkeleton';
@@ -19,6 +20,7 @@ import { useProducts } from './hooks/useApi';
 import { useCart } from './contexts/CartContext';
 
 export default function Storefront() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [view, setView] = useState<'marketplace' | 'artists' | 'product-detail'>('marketplace');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { data: fetchedProducts, isLoading, isError } = useProducts();
@@ -29,14 +31,20 @@ export default function Storefront() {
   const { addToCart, cartCount, isCartOpen, setIsCartOpen } = useCart();
   const products = fetchedProducts || [];
 
-  // Listen for navigation events from other pages (like Account)
+  // Sync state with URL params
   useEffect(() => {
-    const handleRemoteNavigate = (e: any) => {
-      handleNavigate(e.detail);
-    };
-    window.addEventListener('navigate-view', handleRemoteNavigate);
-    return () => window.removeEventListener('navigate-view', handleRemoteNavigate);
-  }, []);
+    const type = searchParams.get('type');
+    if (type === 'skin' || type === 'attachment') {
+      setFilter(type);
+      // Only reset view to marketplace if we aren't already looking at a product detail
+      if (view !== 'product-detail') {
+        setView('marketplace');
+        setSelectedProduct(null);
+      }
+    } else if (!type && view === 'marketplace') {
+      setFilter('all');
+    }
+  }, [searchParams]); // Removed 'view' from dependency to avoid loop and destructive resets
 
   const addToCartHandler = (product: Product) => {
     addToCart({
@@ -77,7 +85,15 @@ export default function Storefront() {
 
   const filteredProducts = filter === 'all' 
     ? products 
-    : products.filter(p => p.category === filter);
+    : products.filter(p => {
+        const typeMatch = p.type === filter || p.category === filter;
+        const tagMatch = p.tags?.some(tag => 
+          tag.toLowerCase().includes(filter) || 
+          (filter === 'skin' && tag.toLowerCase().includes('skins')) ||
+          (filter === 'attachment' && tag.toLowerCase().includes('attachments'))
+        );
+        return typeMatch || tagMatch;
+      });
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -161,10 +177,45 @@ export default function Storefront() {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[400px]">
                   <AnimatePresence mode="popLayout">
-                    {isLoading ? [...Array(8)].map((_, i) => <ProductSkeleton key={i} />) : 
-                      filteredProducts.map(p => <ProductCard key={p.id || (p as any)._id} product={p} onAddToCart={addToCartHandler} onClick={openProductDetail} />)}
+                    {isLoading ? (
+                      [...Array(8)].map((_, i) => <ProductSkeleton key={i} />)
+                    ) : filteredProducts.length === 0 ? (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white/[0.02] border border-dashed border-white/10 rounded-[3rem] overflow-hidden relative group"
+                      >
+                        <div className="absolute inset-0 bg-brand-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="relative z-10">
+                          <div className="w-24 h-24 bg-brand-primary/10 rounded-full flex items-center justify-center mb-8 border border-brand-primary/20 shadow-[0_0_30px_rgba(0,255,204,0.1)] group-hover:shadow-[0_0_50px_rgba(0,255,204,0.3)] transition-all">
+                            <PackageSearch className="w-10 h-10 text-brand-primary" />
+                          </div>
+                          <h3 className="text-3xl font-black uppercase italic tracking-tighter text-white mb-2">
+                            {filter === 'skin' ? 'No Custom Skins Found' : filter === 'attachment' ? 'No Tactical Attachments Found' : 'No Loot Detected'}
+                          </h3>
+                          <p className="text-white/40 font-bold uppercase tracking-widest text-xs mb-8">
+                            {filter === 'all' ? 'The scan returned no results.' : `Our scanners couldn't find any items matching the "${filter}" criteria.`}
+                          </p>
+                          <button 
+                            onClick={() => setSearchParams({})}
+                            className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 mx-auto"
+                          >
+                            <RefreshCcw className="w-3.5 h-3.5" /> Reset Void Scan
+                          </button>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      filteredProducts.map(p => (
+                        <ProductCard 
+                          key={p.id || (p as any)._id} 
+                          product={p} 
+                          onAddToCart={addToCartHandler} 
+                          onClick={openProductDetail} 
+                        />
+                      ))
+                    )}
                   </AnimatePresence>
                 </div>
               </section>
@@ -180,7 +231,13 @@ export default function Storefront() {
           ) : view === 'artists' ? (
             <ArtistsList />
           ) : selectedProduct ? (
-            <ProductDetail product={selectedProduct} allProducts={products} onBack={() => handleNavigate('marketplace')} onAddToCart={addToCartHandler} />
+            <ProductDetail 
+              product={selectedProduct} 
+              allProducts={products} 
+              onBack={() => handleNavigate('marketplace')} 
+              onAddToCart={addToCartHandler}
+              onProductClick={openProductDetail}
+            />
           ) : (
             <div className="flex items-center justify-center h-[60vh]">
               <p className="text-white/40 uppercase font-black">Product Not Found</p>

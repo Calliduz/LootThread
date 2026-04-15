@@ -35,8 +35,8 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
       </div>
 
       <div className="hidden lg:flex items-center gap-10 text-xs font-bold uppercase tracking-[0.2em] text-white/50">
-        <button onClick={() => onNavigate('skins')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Skins</button>
-        <button onClick={() => onNavigate('attachments')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Attachments</button>
+        <button onClick={() => navigate('/marketplace?type=skin')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Skins</button>
+        <button onClick={() => navigate('/marketplace?type=attachment')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Attachments</button>
         <button onClick={() => onNavigate('artists')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Artists</button>
         {isAuthenticated && user?.role === 'customer' && (
           <button onClick={() => navigate('/account')} className="text-brand-primary hover:text-white hover:tracking-[0.3em] transition-all duration-300">Dashboard</button>
@@ -141,13 +141,13 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
               </div>
               <div className="flex flex-col gap-6 text-sm font-bold uppercase tracking-widest text-white/60">
                 <button 
-                  onClick={() => { onNavigate('skins'); setIsMenuOpen(false); }} 
+                  onClick={() => { navigate('/marketplace?type=skin'); setIsMenuOpen(false); }} 
                   className="text-left hover:text-brand-primary transition-colors flex items-center justify-between"
                 >
                   Skins <ArrowRight className="w-4 h-4" />
                 </button>
                 <button 
-                  onClick={() => { onNavigate('attachments'); setIsMenuOpen(false); }} 
+                  onClick={() => { navigate('/marketplace?type=attachment'); setIsMenuOpen(false); }} 
                   className="text-left hover:text-brand-primary transition-colors flex items-center justify-between"
                 >
                   Attachments <ArrowRight className="w-4 h-4" />

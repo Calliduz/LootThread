@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, ArrowLeft, Star, Zap, Shield, Truck, RotateCcw, Send, MessageSquare, User as UserIcon } from 'lucide-react';
 import { Product } from '../types/api';
 import { getAssetUrl } from '../utils/assetHelper';
+import { getRelatedProducts } from '../api/endpoints';
 import ProductCard from './ProductCard';
 import ProductSkeleton from './ProductSkeleton';
 
@@ -21,9 +22,16 @@ interface ProductDetailProps {
   allProducts: Product[];
   onBack: () => void;
   onAddToCart: (product: Product) => void;
+  onProductClick: (product: Product) => void;
 }
 
-export default function ProductDetail({ product, allProducts, onBack, onAddToCart }: ProductDetailProps) {
+export default function ProductDetail({ 
+  product, 
+  allProducts, 
+  onBack, 
+  onAddToCart, 
+  onProductClick 
+}: ProductDetailProps) {
   const [user, setUser] = useState<any>(() => {
     const saved = localStorage.getItem('artist');
     return saved ? JSON.parse(saved) : null;
@@ -32,21 +40,17 @@ export default function ProductDetail({ product, allProducts, onBack, onAddToCar
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
 
   // Recommendation Logic
-  const recommendations = React.useMemo(() => {
-    const others = allProducts.filter(p => p.id !== product.id);
-    
-    if (product.category === 'skin') {
-      const otherSkins = others.filter(p => p.category === 'skin').slice(0, 2);
-      const attachments = others.filter(p => p.category === 'attachment').slice(0, 2);
-      return [...otherSkins, ...attachments];
-    } else {
-      const otherAttachments = others.filter(p => p.category === 'attachment').slice(0, 2);
-      const skins = others.filter(p => p.category === 'skin').slice(0, 2);
-      return [...otherAttachments, ...skins];
-    }
-  }, [product, allProducts]);
+  React.useEffect(() => {
+    setLoadingRelated(true);
+    getRelatedProducts(product.id)
+      .then(data => setRelatedProducts(data))
+      .catch(console.error)
+      .finally(() => setLoadingRelated(false));
+  }, [product.id]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,9 +84,11 @@ export default function ProductDetail({ product, allProducts, onBack, onAddToCar
           />
           <div className="absolute top-6 left-6">
             <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest backdrop-blur-md border ${
-              product.category === 'skin' ? 'bg-brand-accent/20 border-brand-accent/30 text-brand-accent' : 'bg-brand-primary/20 border-brand-primary/30 text-brand-primary'
+              ((product.stockQuantity ?? 0) <= 0 && (product.inventory ?? 0) <= 0)
+                ? 'bg-red-500/20 border-red-500/30 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                : product.category === 'skin' ? 'bg-brand-primary/20 border-brand-primary/30 text-brand-primary' : 'bg-brand-primary/20 border-brand-primary/30 text-brand-primary'
             }`}>
-              {product.category === 'skin' ? 'Legendary Skin' : 'Pro Attachment'}
+              {((product.stockQuantity ?? 0) <= 0 && (product.inventory ?? 0) <= 0) ? 'Sold Out' : product.category === 'skin' || product.type === 'skin' ? 'Legendary Skin' : 'Pro Attachment'}
             </span>
           </div>
         </motion.div>
@@ -119,16 +125,32 @@ export default function ProductDetail({ product, allProducts, onBack, onAddToCar
             <div className="h-12 w-px bg-white/10" />
             <div className="flex flex-col">
               <span className="text-xs uppercase tracking-widest text-white/30 font-bold mb-1">Inventory</span>
-              <span className="text-xl font-mono font-bold text-white">{product.inventory} Units</span>
+              <span className={`text-xl font-mono font-bold ${((product.stockQuantity ?? 0) <= 0 && (product.inventory ?? 0) <= 0) ? 'text-red-500' : 'text-white'}`}>
+                {product.stockQuantity ?? product.inventory ?? 0} Units
+              </span>
             </div>
           </div>
 
-          <button 
-            onClick={() => onAddToCart(product)}
-            className="w-full bg-brand-primary text-black py-5 rounded-2xl font-black uppercase tracking-tighter flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform active:scale-95 shadow-[0_0_30px_rgba(0,255,204,0.2)]"
-          >
-            Add to Loadout <ShoppingCart className="w-5 h-5" />
-          </button>
+          {(product.stockQuantity ?? 0) <= 0 && (product.inventory ?? 0) <= 0 ? (
+            <div className="flex flex-col gap-4">
+              <button 
+                disabled
+                className="w-full bg-white/5 text-white/20 py-5 rounded-2xl font-black uppercase tracking-tighter flex items-center justify-center gap-3 cursor-not-allowed border border-white/5"
+              >
+                Out of Stock <Zap className="w-5 h-5 opacity-20" />
+              </button>
+              <p className="text-center text-[10px] uppercase font-black tracking-widest text-red-500/60 animate-pulse">
+                Deployment Delayed: Awaiting Restock
+              </p>
+            </div>
+          ) : (
+            <button 
+              onClick={() => onAddToCart(product)}
+              className="w-full bg-brand-primary text-black py-5 rounded-2xl font-black uppercase tracking-tighter flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform active:scale-95 shadow-[0_0_30px_rgba(0,255,204,0.2)]"
+            >
+              Add to Loadout <ShoppingCart className="w-5 h-5" />
+            </button>
+          )}
 
           {/* Trust Badges */}
           <div className="grid grid-cols-3 gap-4 mt-12">
@@ -276,30 +298,31 @@ export default function ProductDetail({ product, allProducts, onBack, onAddToCar
           <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[300px]">
           <AnimatePresence mode="popLayout">
-            {allProducts.length === 0 ? (
+            {loadingRelated ? (
               [...Array(4)].map((_, i) => (
                 <motion.div
                   key={`rec-skeleton-${i}`}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ 
-                    duration: 0.4,
-                    delay: i * 0.05,
-                    ease: [0.23, 1, 0.32, 1]
-                  }}
                 >
                   <ProductSkeleton />
                 </motion.div>
               ))
+            ) : relatedProducts.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center text-center py-12 border border-dashed border-white/5 rounded-3xl">
+                <Zap className="w-8 h-8 text-white/10 mb-4" />
+                <p className="text-white/20 font-black uppercase tracking-[0.2em] italic text-[10px]">No related tactical gear detected.</p>
+              </div>
             ) : (
-              recommendations.map((rec) => (
+              relatedProducts.map((rec) => (
                 <ProductCard 
                   key={rec.id} 
                   product={rec} 
                   onAddToCart={onAddToCart} 
+                  onClick={onProductClick}
                 />
               ))
             )}

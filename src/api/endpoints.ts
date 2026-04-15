@@ -60,6 +60,11 @@ export const getProductById = async (id: string) => {
   return response.data;
 };
 
+export const getRelatedProducts = async (id: string) => {
+  const response = await axiosInstance.get<Product[]>(`/products/${id}/related`);
+  return response.data;
+};
+
 export const createProduct = async (data: Partial<Product>) => {
   const response = await axiosInstance.post<Product>('/products', data);
   return response.data;
