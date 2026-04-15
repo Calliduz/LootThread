@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ShoppingCart, Star, Zap } from 'lucide-react';
 import { Product } from '../types/api';
+import { getAssetUrl } from '../utils/assetHelper';
 
 interface ProductCardProps {
   product: Product;
@@ -25,7 +26,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onClick
     >
       <div className="aspect-square overflow-hidden relative">
         <motion.img 
-          src={product.images[0] || `https://picsum.photos/seed/${product.id}/600/600`} 
+          src={getAssetUrl(product.imageUrl || product.images?.[0]) || `https://picsum.photos/seed/${product.id}/600/600`} 
           alt={product.name}
           whileHover={{ scale: 1.15, rotate: 1 }}
           transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}

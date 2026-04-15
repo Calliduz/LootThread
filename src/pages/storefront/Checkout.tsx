@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { createOrder } from '../../api/endpoints';
+import { getAssetUrl } from '../../utils/assetHelper';
 import { Loader2, CheckCircle, Package, CreditCard, Zap, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export default function Checkout() {
@@ -186,7 +187,7 @@ export default function Checkout() {
                     <div key={item.productId} className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/5 border border-white/10 flex-shrink-0">
                         {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <img src={getAssetUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Zap className="w-4 h-4 text-brand-primary/40" />

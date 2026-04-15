@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, ArrowLeft, Star, Zap, Shield, Truck, RotateCcw, Send, MessageSquare, User as UserIcon } from 'lucide-react';
 import { Product } from '../types/api';
+import { getAssetUrl } from '../utils/assetHelper';
 import ProductCard from './ProductCard';
 import ProductSkeleton from './ProductSkeleton';
 
@@ -72,7 +73,7 @@ export default function ProductDetail({ product, allProducts, onBack, onAddToCar
           className="relative aspect-square rounded-[2.5rem] overflow-hidden border border-white/10 bg-bg-card"
         >
           <img 
-            src={product.images[0] || `https://picsum.photos/seed/${product.id}/800/800`} 
+            src={getAssetUrl(product.imageUrl || product.images?.[0]) || `https://picsum.photos/seed/${product.id}/800/800`} 
             alt={product.name}
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -170,7 +171,7 @@ export default function ProductDetail({ product, allProducts, onBack, onAddToCar
           >
             <div className="flex items-center gap-4 mb-6">
               <img 
-                src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} 
+                src={getAssetUrl(user.photoURL) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} 
                 alt="Profile" 
                 className="w-12 h-12 rounded-xl border border-white/10"
                 referrerPolicy="no-referrer"
@@ -229,7 +230,7 @@ export default function ProductDetail({ product, allProducts, onBack, onAddToCar
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-4">
                     <img 
-                      src={review.userAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${review.userId}`} 
+                      src={getAssetUrl(review.userAvatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${review.userId}`} 
                       alt={review.userName} 
                       className="w-10 h-10 rounded-lg border border-white/10"
                       referrerPolicy="no-referrer"

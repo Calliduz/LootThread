@@ -6,6 +6,7 @@ import {
 import { Plus, Edit2, Trash2, X, User as UserIcon } from 'lucide-react';
 import { SkeletonRow } from '../../components/Skeleton';
 import ImageUpload from '../../components/admin/ImageUpload';
+import { getAssetUrl } from '../../utils/assetHelper';
 import toast from 'react-hot-toast';
 
 export default function AdminArtists() {
@@ -171,7 +172,7 @@ export default function AdminArtists() {
                       <div className="w-10 h-10 bg-white/5 rounded-full border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
                         {img ? (
                           <img 
-                            src={img.startsWith('http') ? img : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${img}`} 
+                            src={getAssetUrl(img)} 
                             alt={artist.name} 
                             className="w-full h-full object-cover" 
                           />

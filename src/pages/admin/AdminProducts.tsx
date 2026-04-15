@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Product, Artist, Collection, ProductType } from '../../types/api';
 import {
   getProducts, getArtists, getCollections,
@@ -7,9 +8,11 @@ import {
 import { Plus, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import { SkeletonRow } from '../../components/Skeleton';
 import ImageUpload from '../../components/admin/ImageUpload';
+import { getAssetUrl } from '../../utils/assetHelper';
 import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
+  const queryClient = useQueryClient();
   const [products, setProducts] = useState<Product[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -132,6 +135,7 @@ export default function AdminProducts() {
       
       handleCloseModal();
       toast.success(editingProduct ? 'Product updated.' : 'Product created.');
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       await fetchData();
     } catch {
       toast.error('Failed to save product.');
@@ -208,7 +212,7 @@ export default function AdminProducts() {
                         <div className="w-12 h-12 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
                           {img ? (
                             <img 
-                              src={img.startsWith('http') ? img : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${img}`} 
+                              src={getAssetUrl(img) || `https://picsum.photos/seed/${product.id}/200/200`} 
                               alt={product.title} 
                               className="w-full h-full object-cover" 
                             />

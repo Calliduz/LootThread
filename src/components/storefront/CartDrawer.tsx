@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Trash2, Plus, Minus, ShoppingCart, ArrowRight, Zap } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { getAssetUrl } from '../../utils/assetHelper';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -95,7 +96,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       {/* Thumbnail */}
                       <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex-shrink-0">
                         {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <img src={getAssetUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Zap className="w-6 h-6 text-brand-primary/40" />

@@ -294,6 +294,16 @@ export default function AdminCMS() {
                     />
                   </div>
 
+                  {/* Type */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/40">Data Type</label>
+                    <select
+                      className="w-full bg-[#1c1c1c] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-brand-primary/50"
+                      value={formData.type}
+                      onChange={e => setFormData({ ...formData, type: e.target.value as any })}
+                    >
+                      <option value="text">Plain Text</option>
+                      <option value="json">JSON Object Map</option>
                       <option value="array">JSON Array Collection</option>
                       <option value="image">Image Asset</option>
                     </select>

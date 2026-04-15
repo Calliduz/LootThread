@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, ImageIcon, Loader2 } from 'lucide-react';
 import { uploadImage } from '../../api/endpoints';
+import { getAssetUrl } from '../../utils/assetHelper';
 import toast from 'react-hot-toast';
 
 interface ImageUploadProps {
@@ -52,7 +53,7 @@ export default function ImageUpload({ value, onChange, label, className = '' }: 
         {value ? (
           <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video bg-black/20">
             <img 
-              src={value.startsWith('http') ? value : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${value}`} 
+              src={getAssetUrl(value)} 
               alt="Preview" 
               className="w-full h-full object-cover"
             />

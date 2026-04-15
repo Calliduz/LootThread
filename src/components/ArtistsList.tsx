@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Zap, Star, ExternalLink, Loader2 } from 'lucide-react';
 import { useArtists } from '../hooks/useApi';
+import { getAssetUrl } from '../utils/assetHelper';
 
 export default function ArtistsList() {
   const { data: artists = [], isLoading } = useArtists();
@@ -36,7 +37,7 @@ export default function ArtistsList() {
             <div className="flex items-center gap-6 mb-8">
               <div className="relative">
                 <img 
-                  src={artist.avatar} 
+                  src={getAssetUrl(artist.avatar)} 
                   alt={artist.name} 
                   className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 p-2 group-hover:scale-110 transition-transform duration-500"
                   referrerPolicy="no-referrer"

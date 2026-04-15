@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { Product } from '../types/api';
+import { getAssetUrl } from '../utils/assetHelper';
 
 interface CarouselProps {
   products: Product[];
@@ -41,7 +42,7 @@ export default function Carousel({ products, onProductClick }: CarouselProps) {
         >
           <div className="w-full md:w-1/2 h-full relative">
             <img 
-              src={currentProduct.images[0] || `https://picsum.photos/seed/${currentProduct.id}/800/800`} 
+              src={getAssetUrl(currentProduct.imageUrl || currentProduct.images?.[0]) || `https://picsum.photos/seed/${currentProduct.id}/800/800`} 
               alt={currentProduct.name}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
