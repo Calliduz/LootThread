@@ -112,13 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const loginWithToken = useCallback((token: string) => {
     try {
-      const decoded = jwtDecode<{ id: string; role: string }>(token);
-      // Build a minimal user object from the JWT payload
+      const decoded = jwtDecode<{ id: string; role: string; name?: string; email?: string; avatarUrl?: string }>(token);
       const user: User = {
-        id:    decoded.id,
-        name:  '', // filled from profile fetch below if needed
-        email: '',
-        role:  decoded.role as 'admin' | 'customer',
+        id:        decoded.id,
+        name:      decoded.name  || '',
+        email:     decoded.email || '',
+        role:      decoded.role as 'admin' | 'customer',
+        avatarUrl: decoded.avatarUrl,
       };
       persistAuth(user, token);
       setState({

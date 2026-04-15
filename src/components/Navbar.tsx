@@ -38,6 +38,9 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
         <button onClick={() => onNavigate('skins')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Skins</button>
         <button onClick={() => onNavigate('attachments')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Attachments</button>
         <button onClick={() => onNavigate('artists')} className="hover:text-brand-primary hover:tracking-[0.3em] transition-all duration-300">Artists</button>
+        {isAuthenticated && user?.role === 'customer' && (
+          <button onClick={() => navigate('/account')} className="text-brand-primary hover:text-white hover:tracking-[0.3em] transition-all duration-300">Dashboard</button>
+        )}
         {isAuthenticated && user?.role === 'admin' && (
           <button onClick={() => navigate('/admin')} className="text-brand-accent hover:text-white hover:tracking-[0.3em] transition-all duration-300">Admin Panel</button>
         )}

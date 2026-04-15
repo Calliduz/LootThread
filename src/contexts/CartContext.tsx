@@ -15,6 +15,8 @@ interface CartContextType {
   cartItems: CartItem[];
   cartCount: number;
   cartTotal: number;
+  isCartOpen: boolean;
+  setIsCartOpen: (isOpen: boolean) => void;
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, delta: number) => void;
@@ -48,6 +50,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>(loadCart);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const persist = useCallback((items: CartItem[]) => {
     setCartItems(items);
@@ -63,6 +66,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       saveCart(updated);
       return updated;
     });
+    setIsCartOpen(true);
   }, []);
 
   const removeFromCart = useCallback((productId: string) => {
@@ -91,7 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const cartTotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, cartCount, cartTotal, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider value={{ cartItems, cartCount, cartTotal, isCartOpen, setIsCartOpen, addToCart, removeFromCart, updateQuantity, clearCart }}>
       {children}
     </CartContext.Provider>
   );

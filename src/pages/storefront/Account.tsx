@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getMyOrders, updatePassword } from '../../api/endpoints';
+import { useCart } from '../../contexts/CartContext';
+import Navbar from '../../components/Navbar';
+import CartDrawer from '../../components/storefront/CartDrawer';
 import toast from 'react-hot-toast';
 import {
   LogOut, User as UserIcon, Package, Settings, ShieldAlert,
@@ -28,6 +31,7 @@ interface Order {
 export default function Account() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { cartItems, cartCount, isCartOpen, setIsCartOpen } = useCart();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -88,7 +92,19 @@ export default function Account() {
   };
 
   return (
-    <div className="min-h-screen bg-bg-dark pt-24 pb-12 px-6 relative">
+    <div className="min-h-screen bg-bg-dark">
+      {/* Full site Navbar */}
+      <Navbar
+        cartCount={cartCount}
+        onOpenCart={() => setIsCartOpen(true)}
+        onNavigate={(view) => {
+          navigate('/');
+          // After navigation, the Storefront component handles the view
+          setTimeout(() => window.dispatchEvent(new CustomEvent('navigate-view', { detail: view })), 100);
+        }}
+      />
+
+      <div className="pt-8 pb-12 px-6 relative">
       <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-brand-primary/5 to-transparent pointer-events-none" />
 
       <div className="max-w-5xl mx-auto space-y-8 relative z-10">
@@ -102,10 +118,17 @@ export default function Account() {
           <div className="flex items-center gap-6 relative z-10">
             <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-1">
               <img
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`}
+                src={
+                  user?.avatarUrl
+                    ? user.avatarUrl
+                    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`
+                }
                 alt="Avatar"
-                className="w-full h-full rounded-xl bg-black"
+                className="w-full h-full rounded-xl object-cover bg-black"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`;
+                }}
               />
             </div>
             <div>
@@ -329,6 +352,10 @@ export default function Account() {
 
         </div>
       </div>
+      </div>
+      
+      {/* Global Cart Drawer */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 }

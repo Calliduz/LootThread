@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Zap, ArrowRight, Sparkles } from 'lucide-react';
 import Navbar from './components/Navbar';
@@ -25,10 +25,18 @@ export default function Storefront() {
   const [filter, setFilter] = useState<'all' | 'skin' | 'attachment'>('all');
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const { addToCart, cartCount } = useCart();
+  
+  const { addToCart, cartCount, isCartOpen, setIsCartOpen } = useCart();
   const products = fetchedProducts || [];
+
+  // Listen for navigation events from other pages (like Account)
+  useEffect(() => {
+    const handleRemoteNavigate = (e: any) => {
+      handleNavigate(e.detail);
+    };
+    window.addEventListener('navigate-view', handleRemoteNavigate);
+    return () => window.removeEventListener('navigate-view', handleRemoteNavigate);
+  }, []);
 
   const addToCartHandler = (product: Product) => {
     addToCart({
@@ -37,7 +45,6 @@ export default function Storefront() {
       price: product.price,
       imageUrl: product.imageUrl || product.images?.[0],
     });
-    setIsCartOpen(true);
   };
 
   const handleNavigate = (newView: string) => {

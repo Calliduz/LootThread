@@ -1,14 +1,15 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { jwtDecode } from 'jwt-decode';
 import toast from 'react-hot-toast';
 
 /**
  * OAuthCallback
- * 
- * This page is the landing page after a Google or GitHub OAuth redirect.
- * It reads the `?token=` query param, logs the user in via AuthContext,
- * strips the token from the URL (for security), and redirects to /account.
+ *
+ * Landing page after Google/Facebook OAuth redirect.
+ * Reads `?token=` query param, logs the user in via AuthContext,
+ * then routes: admin → /admin, customer → /account.
  */
 export default function OAuthCallback() {
   const [searchParams] = useSearchParams();
@@ -27,10 +28,16 @@ export default function OAuthCallback() {
 
     if (token) {
       loginWithToken(token);
-      // Replace the current history entry to remove the token from the URL
       window.history.replaceState({}, document.title, '/oauth/callback');
       toast.success('Welcome to LootThread!');
-      navigate('/account', { replace: true });
+
+      // Route based on role decoded from JWT
+      try {
+        const { role } = jwtDecode<{ role: string }>(token);
+        navigate(role === 'admin' ? '/admin' : '/account', { replace: true });
+      } catch {
+        navigate('/account', { replace: true });
+      }
     } else {
       toast.error('No token received. Please try again.');
       navigate('/login', { replace: true });
