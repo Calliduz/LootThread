@@ -334,6 +334,7 @@ function CheckoutForm({
 
 // ─── CheckoutLoader: handles promo code state + payment intent ─────────────────
 function CheckoutLoader() {
+  const { cartItems } = useCart();
   const [intentData, setIntentData] = useState<PaymentIntentData | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<DeliveryAddress[]>([]);
   const [cartSnapshot, setCartSnapshot] = useState<any[]>([]);

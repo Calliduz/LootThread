@@ -15,6 +15,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminNewsletter from './pages/admin/AdminNewsletter';
 import AdminDiscounts from './pages/admin/AdminDiscounts';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Storefront Pages
 import Login from './pages/storefront/Login';
@@ -28,6 +29,7 @@ import Checkout from './pages/storefront/Checkout';
 import Receipt from './pages/storefront/Receipt';
 import PrivacyPolicy from './pages/storefront/PrivacyPolicy';
 import TermsOfService from './pages/storefront/TermsOfService';
+import NotFound from './pages/storefront/NotFound';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 
@@ -43,7 +45,8 @@ const CustomerRoute = ({ children }: { children: React.ReactNode }) => {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
       <CartProvider>
       <BrowserRouter>
         <Toaster
@@ -120,10 +123,11 @@ export default function App() {
           </Route>
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </CartProvider>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
