@@ -3,11 +3,36 @@ import { Link, useNavigate } from 'react-router-dom';
 import { forgotPassword } from '../../api/endpoints';
 import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useLocation } from 'react-router-dom';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const stateEmail = (location.state as { email?: string })?.email;
+    if (stateEmail) {
+      setEmail(stateEmail);
+      // We can't call handleSubmit directly as it expects a FormEvent
+      // but we can extract the logic or just call it with a dummy or use a wrapper
+      autoDispatch(stateEmail);
+    }
+  }, [location.state]);
+
+  const autoDispatch = async (e: string) => {
+    setLoading(true);
+    try {
+      await forgotPassword(e);
+      toast.success('OTP auto-transmitted! Check your email.');
+      navigate('/reset-password', { state: { email: e } });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Auto-dispatch failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

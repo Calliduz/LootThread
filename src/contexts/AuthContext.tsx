@@ -136,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     persistAuth(null, null);
+    localStorage.removeItem('lt_cart'); // Prevent state leakage
     setState({
       user: null, token: null,
       isAuthenticated: false, isAdmin: false, isLoading: false,

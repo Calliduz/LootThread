@@ -46,6 +46,10 @@ export default function Login() {
       
       navigate(shouldHonourOrigin ? origin : fallback, { replace: true });
     } catch (err: any) {
+      if (err.response?.status === 403 && err.response?.data?.needsVerification) {
+        navigate('/verify-email', { state: { email: err.response.data.email } });
+        return;
+      }
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }
   };

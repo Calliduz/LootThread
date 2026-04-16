@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../../contexts/CartContext';
-import { createOrder, createPaymentIntent, getProfile, validatePromoCode } from '../../api/endpoints';
+import { createOrder, createPaymentIntent, getProfile, validatePromoCode, getEligiblePromoCodes } from '../../api/endpoints';
 import { getAssetUrl } from '../../utils/assetHelper';
 import { Loader2, CheckCircle, Package, Zap, ArrowLeft, ShieldCheck, MapPin, Tag, X, BadgePercent } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -54,10 +54,14 @@ function CheckoutForm({
   savedAddresses,
   cartSnapshot,
   intentData,
+  promoProps,
+  autoAppliedPromo,
 }: {
   savedAddresses: DeliveryAddress[];
   cartSnapshot: any[];
   intentData: PaymentIntentData;
+  promoProps: any;
+  autoAppliedPromo: string | null;
 }) {
   const { cartItems, clearCart } = useCart();
   const navigate = useNavigate();
@@ -294,8 +298,20 @@ function CheckoutForm({
                     </div>
                   )}
 
-                  <div className="flex justify-between text-base font-black text-white pt-2 border-t border-white/10 mt-2">
+                  <div className="flex justify-between text-base font-black text-white pt-2 border-t border-white/10 mt-2 mb-4">
                     <span>Total</span><span className="text-brand-primary">₱{total.toFixed(2)}</span>
+                  </div>
+
+                  {/* Desktop Promo Code Input */}
+                  <div className="hidden lg:block pt-4 border-t border-white/10">
+                    {autoAppliedPromo && appliedPromoCode === autoAppliedPromo && (
+                      <div className="mb-3 px-3 py-2 bg-brand-primary/10 border border-brand-primary/30 rounded-lg text-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
+                          Auto-Applied Your Best Perk! (-{discountPercent}%)
+                        </span>
+                      </div>
+                    )}
+                    <PromoCodeInput {...promoProps} />
                   </div>
                 </div>
 
@@ -325,7 +341,7 @@ function CheckoutLoader() {
   const [promoError, setPromoError] = useState('');
   const [validatingPromo, setValidatingPromo] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
-  const { cartItems } = useCart();
+  const [autoAppliedPromo, setAutoAppliedPromo] = useState<string | null>(null);
 
   const fetchPaymentIntent = async (promoCode?: string) => {
     try {
@@ -342,7 +358,22 @@ function CheckoutLoader() {
   useEffect(() => {
     setCartSnapshot(cartItems.map(i => ({ ...i })));
     getProfile().then(data => { if (data.deliveryAddresses) setSavedAddresses(data.deliveryAddresses); }).catch(console.error);
-    fetchPaymentIntent();
+
+    // Fetch eligible promos, auto-apply the best one
+    getEligiblePromoCodes().then(async (promos) => {
+      let initialPromo;
+      if (promos && promos.length > 0) {
+        initialPromo = promos[0].code;
+        setAppliedPromo(initialPromo);
+        setAutoAppliedPromo(initialPromo);
+        toast.success(`Auto-applied your best perk: ${initialPromo}!`);
+      }
+      await fetchPaymentIntent(initialPromo);
+    }).catch(async (err) => {
+      console.error('Failed to fetch eligible promos', err);
+      // Fallback
+      await fetchPaymentIntent();
+    });
   }, []);
 
   const handleApplyPromo = async () => {
@@ -378,19 +409,25 @@ function CheckoutLoader() {
     );
   }
 
+  const promoProps = {
+    promoInput, setPromoInput, promoError, appliedPromo, validatingPromo, onApply: handleApplyPromo, onRemove: handleRemovePromo
+  };
+
   return (
     <div>
-      {/* Promo Code Banner (outside Elements so it can re-init) */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-bg-card/95 backdrop-blur-xl border-t border-white/5 p-4 lg:hidden">
-        <PromoCodeInput
-          promoInput={promoInput} setPromoInput={setPromoInput}
-          promoError={promoError} appliedPromo={appliedPromo}
-          validatingPromo={validatingPromo}
-          onApply={handleApplyPromo} onRemove={handleRemovePromo}
-        />
+      {/* Promo Code Banner (Mobile) */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-bg-card/95 backdrop-blur-xl border-t border-white/5 p-4 lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        {autoAppliedPromo && appliedPromo === autoAppliedPromo && (
+          <div className="mb-2 px-3 py-1.5 bg-brand-primary/10 border border-brand-primary/30 rounded-lg text-center">
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
+              Auto-Applied Your Best Perk!
+            </span>
+          </div>
+        )}
+        <PromoCodeInput {...promoProps} />
       </div>
       <Elements key={intentData.clientSecret} stripe={stripePromise} options={{ clientSecret: intentData.clientSecret, appearance: stripeAppearance }}>
-        <CheckoutForm savedAddresses={savedAddresses} cartSnapshot={cartSnapshot} intentData={intentData} />
+        <CheckoutForm savedAddresses={savedAddresses} cartSnapshot={cartSnapshot} intentData={intentData} promoProps={promoProps} autoAppliedPromo={autoAppliedPromo} />
       </Elements>
     </div>
   );

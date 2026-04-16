@@ -23,6 +23,11 @@ export const forgotPassword = async (email: string) => {
   return response.data;
 };
 
+export const verifyEmail = async (data: { email: string; otp: string }): Promise<AuthResponse> => {
+  const response = await axiosInstance.post<AuthResponse>('/auth/verify-email', data);
+  return response.data;
+};
+
 export const resetPassword = async (data: { email: string; otp: string; newPassword: string }) => {
   const response = await axiosInstance.post('/auth/reset-password', data);
   return response.data;
@@ -271,6 +276,11 @@ export const broadcastNewsletter = async (data: { subject: string; message: stri
 export const validatePromoCode = async (code: string) => {
   const response = await axiosInstance.post('/promo/validate', { code });
   return response.data as { code: string; discountPercent: number; description?: string };
+};
+
+export const getEligiblePromoCodes = async () => {
+  const response = await axiosInstance.get('/promo/eligible');
+  return response.data as Array<{ code: string; discountPercent: number; description?: string }>;
 };
 
 export const getAllPromoCodes = async () => {

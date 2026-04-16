@@ -7,8 +7,10 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const { register, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -23,15 +25,28 @@ export default function Register() {
     setError('');
 
     // --- Validation ---
+    const nameRegex = /^[a-zA-Z\s]{2,50}$/;
+    if (!nameRegex.test(name)) {
+      setError('Name must be 2-50 characters and contain only letters and spaces.');
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address.');
       return;
     }
-    if (password.length < 6) {
-      setError('Passcode must be at least 6 characters.');
+
+    if (password.length < 8) {
+      setError('Passcode must be at least 8 characters for security.');
       return;
     }
+
+    if (password !== confirmPassword) {
+      setError('Passcodes do not match.');
+      return;
+    }
+
     if (!agreedToTerms) {
       setError('You must accept the Protocols to join the collective.');
       return;
@@ -39,9 +54,8 @@ export default function Register() {
 
     try {
       const data = await register({ name, email, password });
-      // Registration is usually customer, but let's be robust
-      const isAdmin = data?.user?.role === 'admin';
-      navigate(isAdmin ? '/admin' : '/account', { replace: true });
+      // Redirect to verification instead of account
+      navigate('/verify-email', { state: { email }, replace: true });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     }
@@ -112,6 +126,28 @@ export default function Register() {
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-white/60 ml-2">Confirm Passcode</label>
+            <div className="relative">
+              <input 
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white focus:outline-none focus:border-brand-primary/50 transition-colors"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(v => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-brand-primary transition-colors"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>

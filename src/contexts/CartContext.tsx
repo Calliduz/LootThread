@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,6 +52,14 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>(loadCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  // Reset cart when authentication state changes to false
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setCartItems([]);
+    }
+  }, [isAuthenticated]);
 
   const persist = useCallback((items: CartItem[]) => {
     setCartItems(items);

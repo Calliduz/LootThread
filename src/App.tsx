@@ -23,6 +23,7 @@ import ForgotPassword from './pages/storefront/ForgotPassword';
 import ResetPassword from './pages/storefront/ResetPassword';
 import Account from './pages/storefront/Account';
 import OAuthCallback from './pages/storefront/OAuthCallback';
+import VerifyEmail from './pages/storefront/VerifyEmail';
 import Checkout from './pages/storefront/Checkout';
 import Receipt from './pages/storefront/Receipt';
 import PrivacyPolicy from './pages/storefront/PrivacyPolicy';
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
 
           {/* Protected Customer Routes */}
