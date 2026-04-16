@@ -281,7 +281,7 @@ export default function Account() {
 
               <div className="text-center md:text-left space-y-2">
                 <div className="flex flex-col md:flex-row items-center gap-3">
-                  <h1 className="text-4xl font-black uppercase italic tracking-tighter text-white">
+                  <h1 className="text-4xl font-black uppercase italic tracking-tighter text-white break-all max-w-[200px] md:max-w-md lg:max-w-lg">
                     {user?.name}
                   </h1>
                   <div className="flex items-center gap-2 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(0,255,204,0.1)]">
