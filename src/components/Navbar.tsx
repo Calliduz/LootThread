@@ -83,7 +83,8 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
                       key={p.id}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors"
                       onClick={() => {
-                        navigate('/marketplace');
+                        navigate(`/marketplace?search=${encodeURIComponent(p.name)}`);
+                        onNavigate('marketplace');
                         setTimeout(() => setSearchQuery(''), 100);
                       }}
                     >
