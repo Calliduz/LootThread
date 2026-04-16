@@ -13,8 +13,8 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
   return response.data;
 };
 
-export const register = async (data: { name: string; email: string; password: string }): Promise<AuthResponse> => {
-  const response = await axiosInstance.post<AuthResponse>('/auth/register', data);
+export const register = async (data: { name: string; email: string; password: string }): Promise<{ message: string; email: string }> => {
+  const response = await axiosInstance.post<{ message: string; email: string }>('/auth/register', data);
   return response.data;
 };
 

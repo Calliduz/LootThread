@@ -11,7 +11,7 @@ export default function Register() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<React.ReactNode>('');
   const { register, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -22,12 +22,13 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     setError('');
 
     // --- Validation ---
-    const nameRegex = /^[a-zA-Z\s]{2,50}$/;
+    const nameRegex = /^[a-zA-Z0-9\s]{2,50}$/;
     if (!nameRegex.test(name)) {
-      setError('Name must be 2-50 characters and contain only letters and spaces.');
+      setError('Name must be 2-50 characters and contain only letters, numbers, and spaces.');
       return;
     }
 
@@ -57,6 +58,21 @@ export default function Register() {
       // Redirect to verification instead of account
       navigate('/verify-email', { state: { email }, replace: true });
     } catch (err: any) {
+      if (err.response?.status === 409) {
+        setError(
+          <span className="flex flex-col gap-2">
+            <span>Identity already exists in the collective.</span>
+            <button 
+              type="button"
+              onClick={() => navigate('/login', { state: { email } })}
+              className="text-brand-primary underline uppercase tracking-widest text-[10px] hover:text-white transition-colors"
+            >
+              Sign in to your account
+            </button>
+          </span>
+        );
+        return;
+      }
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     }
   };

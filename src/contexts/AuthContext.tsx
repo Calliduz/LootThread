@@ -13,7 +13,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
-  register: (data: { name: string; email: string; password: string }) => Promise<AuthResponse>;
+  register: (data: { name: string; email: string; password: string }) => Promise<{ message: string; email: string }>;
   loginWithToken: (token: string) => void;
   logout: () => void;
 }
@@ -86,18 +86,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (credentials: { name: string; email: string; password: string }): Promise<AuthResponse> => {
+  const register = useCallback(async (credentials: { name: string; email: string; password: string }): Promise<{ message: string; email: string }> => {
     setState(prev => ({ ...prev, isLoading: true }));
     try {
-      const data: AuthResponse = await registerApi(credentials);
-      persistAuth(data.user, data.token);
-      setState({
-        user: data.user,
-        token: data.token,
-        isAuthenticated: true,
-        isAdmin: data.user.role === 'admin',
-        isLoading: false,
-      });
+      const data = await registerApi(credentials);
+      // We don't dispatch authentication context changes here anymore since the user needs to verify their email.
+      setState(prev => ({ ...prev, isLoading: false }));
       return data;
     } catch (error) {
       setState(prev => ({ ...prev, isLoading: false }));
