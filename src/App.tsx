@@ -14,6 +14,7 @@ import AdminCMS from './pages/admin/AdminCMS';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminNewsletter from './pages/admin/AdminNewsletter';
+import AdminDiscounts from './pages/admin/AdminDiscounts';
 
 // Storefront Pages
 import Login from './pages/storefront/Login';
@@ -113,6 +114,7 @@ export default function App() {
             <Route path="cms" element={<AdminCMS />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="newsletter" element={<AdminNewsletter />} />
+            <Route path="discounts" element={<AdminDiscounts />} />
           </Route>
 
           {/* Catch-all */}

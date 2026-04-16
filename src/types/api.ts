@@ -65,6 +65,8 @@ export interface User {
   role: 'admin' | 'customer';
   avatarUrl?: string;
   isActive?: boolean;
+  xp?: number;
+  level?: number;
   deliveryAddresses?: {
     id?: string;
     _id?: string;
@@ -75,6 +77,19 @@ export interface User {
     country: string;
     isDefault: boolean;
   }[];
+}
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  description?: string;
+  discountPercent: number;
+  minLevel: number;
+  expiryDate?: string | null;
+  usageLimit?: number | null;
+  usedCount: number;
+  isActive: boolean;
+  createdAt?: string;
 }
 
 export interface LoginCredentials {

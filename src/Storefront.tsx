@@ -25,6 +25,7 @@ export default function Storefront() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { data: fetchedProducts, isLoading, isError } = useProducts();
   const [filter, setFilter] = useState<'all' | 'skin' | 'attachment'>('all');
+  const [isFiltering, setIsFiltering] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   
@@ -33,24 +34,40 @@ export default function Storefront() {
 
   // Sync state with URL params
   useEffect(() => {
+    setIsFiltering(true);
+    
+    // Scrol to marketplace if we are filtering
     const type = searchParams.get('type');
     const search = searchParams.get('search');
+    
+    if (type || search) {
+      setTimeout(() => {
+        document.getElementById('marketplace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
-    if (type === 'skin' || type === 'attachment') {
-      setFilter(type);
-      // Only reset view to marketplace if we aren't already looking at a product detail
-      if (view !== 'product-detail') {
+    const timeout = setTimeout(() => {
+      if (type === 'skin' || type === 'attachment') {
+        setFilter(type);
+        // Only reset view to marketplace if we aren't already looking at a product detail
+        if (view !== 'product-detail') {
+          setView('marketplace');
+          setSelectedProduct(null);
+        }
+      } else if (search) {
+        // If there is a search query, force return to marketplace to show results
         setView('marketplace');
         setSelectedProduct(null);
+        if (!type) setFilter('all');
+      } else if (!type && !search && view === 'marketplace') {
+        setFilter('all');
       }
-    } else if (search) {
-      // If there is a search query, force return to marketplace to show results
-      setView('marketplace');
-      setSelectedProduct(null);
-      if (!type) setFilter('all');
-    } else if (!type && !search && view === 'marketplace') {
-      setFilter('all');
-    }
+      setIsFiltering(false);
+    }, 400);
+
+    return () => clearTimeout(timeout);
   }, [searchParams]); // Removed 'view' from dependency to avoid loop and destructive resets
 
   const addToCartHandler = (product: Product) => {
@@ -63,24 +80,35 @@ export default function Storefront() {
   };
 
   const handleNavigate = (newView: string) => {
+    let shouldScrollToMarketplace = false;
     if (newView === 'skins') {
       setView('marketplace');
       setFilter('skin');
       setSelectedProduct(null);
+      shouldScrollToMarketplace = true;
     } else if (newView === 'attachments') {
       setView('marketplace');
       setFilter('attachment');
       setSelectedProduct(null);
+      shouldScrollToMarketplace = true;
     } else if (newView === 'marketplace') {
       setView('marketplace');
       setFilter('all');
       setSelectedProduct(null);
+      shouldScrollToMarketplace = true;
     } else {
       setView(newView as any);
       if (newView !== 'product-detail') setSelectedProduct(null);
     }
     setIsCartOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    if (shouldScrollToMarketplace) {
+      setTimeout(() => {
+        document.getElementById('marketplace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const openProductDetail = (product: Product) => {
@@ -176,7 +204,7 @@ export default function Storefront() {
               </section>
 
               {/* Marketplace */}
-              <section className="px-6 lg:px-12 py-24 bg-bg-dark relative">
+              <section id="marketplace" className="px-6 lg:px-12 py-24 bg-bg-dark relative">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
                   <div>
                     <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-4">
@@ -193,7 +221,7 @@ export default function Storefront() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[400px]">
                   <AnimatePresence mode="popLayout">
-                    {isLoading ? (
+                    {isLoading || isFiltering ? (
                       [...Array(8)].map((_, i) => <ProductSkeleton key={i} />)
                     ) : filteredProducts.length === 0 ? (
                       <motion.div 

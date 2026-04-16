@@ -114,7 +114,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatCard
           label="Total Revenue"
-          value={`$${(stats?.totalRevenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={`₱${(stats?.totalRevenue ?? 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={DollarSign}
           sub="Completed + Processing orders"
           trend="+live"
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-xs font-black text-brand-primary tracking-tight">${order.totalAmount.toFixed(2)}</span>
+                      <span className="text-xs font-black text-brand-primary tracking-tight">₱{order.totalAmount.toFixed(2)}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border shadow-[0_0_10px_rgba(0,0,0,0.5)] ${
@@ -210,7 +210,7 @@ export default function AdminDashboard() {
           {[
             { label: 'Manage Orders',   href: '/admin/orders'      },
             { label: 'Add Product',     href: '/admin/products'    },
-            { label: 'Edit CMS',        href: '/admin/cms'         },
+            { label: 'Discounts',       href: '/admin/discounts'   },
             { label: 'View Artists',    href: '/admin/artists'     },
           ].map(({ label, href }) => (
             <a

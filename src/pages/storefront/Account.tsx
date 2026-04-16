@@ -58,6 +58,25 @@ export default function Account() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
+  // --- Loyalty State ---
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+
+  // XP formula: same as backend
+  const XP_PER_LEVEL = 5000;
+  const xpIntoCurrentLevel = xp % XP_PER_LEVEL;
+  const progressPercent = (xpIntoCurrentLevel / XP_PER_LEVEL) * 100;
+  const xpToNextLevel = XP_PER_LEVEL - xpIntoCurrentLevel;
+
+  // Rank name based on level
+  const getRankName = (lvl: number) => {
+    if (lvl >= 20) return 'Mythic Operative';
+    if (lvl >= 15) return 'Elite Phantom';
+    if (lvl >= 10) return 'Shadow Veteran';
+    if (lvl >= 5) return 'Tactical Agent';
+    return 'Recruit';
+  };
+
   // --- Change Password State ---
   const [showPwForm, setShowPwForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -89,6 +108,8 @@ export default function Account() {
     getProfile()
       .then((data) => {
         if (data.deliveryAddresses) setAddresses(data.deliveryAddresses);
+        if (typeof data.xp === 'number') setXp(data.xp);
+        if (typeof data.level === 'number') setLevel(data.level);
       })
       .catch(console.error);
   }, []);
@@ -271,13 +292,13 @@ export default function Account() {
                 <p className="text-white/30 font-mono text-xs tracking-widest">{user?.email}</p>
                 <div className="flex items-center justify-center md:justify-start gap-4 mt-4">
                   <div className="flex flex-col">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Class</span>
-                    <span className="text-[10px] font-bold text-white/80 uppercase">Elite Operative</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Rank</span>
+                    <span className="text-[10px] font-bold text-white/80 uppercase">{getRankName(level)}</span>
                   </div>
                   <div className="w-px h-6 bg-white/5" />
                   <div className="flex flex-col">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Loyalty</span>
-                    <span className="text-[10px] font-bold text-brand-primary uppercase">Tier 01</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Level</span>
+                    <span className="text-[10px] font-bold text-brand-primary uppercase">LVL {level}</span>
                   </div>
                 </div>
               </div>
@@ -292,6 +313,70 @@ export default function Account() {
               </button>
             </div>
           </div>
+
+          {/* ═══ LOYALTY RANK SECTION ══════════════════════════════════════════ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-bg-card border border-brand-primary/20 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-[0_0_60px_rgba(0,255,204,0.05)]"
+          >
+            {/* Background glow */}
+            <div className="absolute -top-16 -right-16 w-64 h-64 bg-brand-primary/5 blur-[80px] rounded-full pointer-events-none" />
+
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-8 h-8 bg-brand-primary/10 border border-brand-primary/20 rounded-xl flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-brand-primary" />
+                    </div>
+                    <h2 className="text-sm font-black uppercase italic tracking-widest text-white">Loyalty Rank</h2>
+                  </div>
+                  <p className="text-white/30 text-[10px] uppercase tracking-widest ml-11">Earn 1 XP per ₱1 spent · Level up every 5,000 XP</p>
+                </div>
+
+                {/* Level Badge */}
+                <div className="flex items-center gap-4">
+                  <div className="text-center bg-brand-primary/10 border border-brand-primary/20 rounded-2xl px-6 py-4">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-brand-primary/60 mb-1">Level</p>
+                    <p className="text-4xl font-black text-brand-primary tracking-tighter leading-none">{level}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-1">{getRankName(level)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">Total XP</p>
+                    <p className="text-2xl font-black text-white tracking-tighter">{xp.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* XP Progress Bar */}
+              <div className="space-y-3">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                  <span className="text-white/40">{xpIntoCurrentLevel.toLocaleString()} XP this level</span>
+                  <span className="text-brand-primary">{xpToNextLevel.toLocaleString()} XP to Level {level + 1}</span>
+                </div>
+                <div className="relative h-3 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-brand-primary/80 to-brand-primary rounded-full shadow-[0_0_12px_rgba(0,255,204,0.6)]"
+                  />
+                  {/* Pulse dot at progress end */}
+                  <motion.div
+                    initial={{ left: 0 }}
+                    animate={{ left: `${Math.max(progressPercent - 1, 0)}%` }}
+                    transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
+                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-brand-primary shadow-[0_0_8px_rgba(0,255,204,1)] border-2 border-white"
+                  />
+                </div>
+                <p className="text-[10px] text-white/20 text-center">
+                  Use promo codes at checkout to get loyalty discounts. New codes unlock as you level up!
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Dashboard Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -403,7 +488,7 @@ export default function Account() {
                                 </span>
                                 <span className="text-3xl font-black text-white tracking-tighter leading-none">
                                   <span className="text-brand-primary/50 text-sm mr-1">
-                                    $
+                                    ₱
                                   </span>
                                   {order.totalAmount.toFixed(2)}
                                 </span>
@@ -437,7 +522,7 @@ export default function Account() {
                                       Qty: {item.quantity}
                                     </span>
                                     <span className="text-[11px] font-black text-white/90">
-                                      ${(item.price * item.quantity).toFixed(2)}
+                                      ₱{(item.price * item.quantity).toFixed(2)}
                                     </span>
                                   </div>
                                 </div>
@@ -734,7 +819,7 @@ export default function Account() {
                       Total Spent
                     </span>
                     <span className="text-sm font-black text-brand-primary">
-                      $
+                      ₱
                       {orders
                         .reduce((sum, o) => sum + o.totalAmount, 0)
                         .toFixed(2)}

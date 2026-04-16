@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard, Package, Layers, Palette, FileText,
-  LogOut, Menu, X, ChevronRight, ShoppingCart, Mail
+  LogOut, Menu, X, ChevronRight, ShoppingCart, Mail, BadgePercent
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -13,7 +13,8 @@ const NAV_ITEMS = [
   { to: '/admin/collections',  label: 'Collections',     icon: Layers },
   { to: '/admin/artists',      label: 'Artists',         icon: Palette },
   { to: '/admin/cms',          label: 'Storefront CMS',  icon: FileText },
-  { to: '/admin/newsletter',   label: 'Newsletter',       icon: Mail },
+  { to: '/admin/newsletter',   label: 'Newsletter',      icon: Mail },
+  { to: '/admin/discounts',    label: 'Discounts',       icon: BadgePercent },
 ];
 
 export default function AdminLayout() {

@@ -106,11 +106,11 @@ function OrderItemsModal({ order, onClose }: { order: Order; onClose: () => void
                 <div className="flex items-center gap-3 mt-1">
                   <span className="text-[10px] text-white/40 font-bold uppercase">Qty: {item.quantity}</span>
                   <span className="w-1 h-1 rounded-full bg-white/10" />
-                  <span className="text-[10px] text-brand-primary/60 font-bold uppercase tracking-tighter">Unit: ${item.price.toFixed(2)}</span>
+                  <span className="text-[10px] text-brand-primary/60 font-bold uppercase tracking-tighter">Unit: ₱{item.price.toFixed(2)}</span>
                 </div>
               </div>
               <p className="text-lg font-black text-white flex-shrink-0">
-                ${(item.price * item.quantity).toFixed(2)}
+                ₱{(item.price * item.quantity).toFixed(2)}
               </p>
             </motion.div>
           ))}
@@ -126,7 +126,7 @@ function OrderItemsModal({ order, onClose }: { order: Order; onClose: () => void
             </div>
             <div className="text-right">
               <p className="text-[10px] text-brand-primary/60 font-black uppercase tracking-widest mb-1">Total Valuation</p>
-              <p className="text-4xl font-black text-brand-primary tracking-tighter">${order.totalAmount.toFixed(2)}</p>
+              <p className="text-4xl font-black text-brand-primary tracking-tighter">₱{order.totalAmount.toFixed(2)}</p>
             </div>
           </div>
           
@@ -293,7 +293,7 @@ export default function AdminOrders() {
                   {/* Total */}
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-white/20 lg:hidden mb-1">Valuation</p>
-                    <p className="text-lg font-black text-brand-primary tracking-tighter">${order.totalAmount.toFixed(2)}</p>
+                    <p className="text-lg font-black text-brand-primary tracking-tighter">₱{order.totalAmount.toFixed(2)}</p>
                   </div>
 
                   {/* Game Tag */}

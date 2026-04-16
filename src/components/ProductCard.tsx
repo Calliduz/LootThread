@@ -84,7 +84,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onClick
         <div className="flex items-center justify-between mt-auto">
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest text-white/30 font-bold">Price</span>
-            <span className="text-xl font-mono font-bold text-brand-primary">${product.price}</span>
+            <span className="text-xl font-mono font-bold text-brand-primary">₱{product.price}</span>
           </div>
           
           <motion.button 

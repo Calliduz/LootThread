@@ -128,9 +128,13 @@ export default function AdminProducts() {
       };
 
       if (editingProduct) {
-        await updateProduct(editingProduct.id, payload);
+        const updated = await updateProduct(editingProduct.id, payload);
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...payload, ...updated } : p));
       } else {
-        await createProduct(payload);
+        const created = await createProduct(payload);
+        if (created) {
+          setProducts(prev => [created, ...prev]);
+        }
       }
       
       handleCloseModal();
@@ -232,7 +236,7 @@ export default function AdminProducts() {
                     </td>
                     <td className="px-6 py-4 text-white/70">{art}</td>
                     <td className="px-6 py-4 text-white/70">{col}</td>
-                    <td className="px-6 py-4 text-right font-mono text-brand-primary">${product.price?.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-mono text-brand-primary">₱{product.price?.toFixed(2)}</td>
                     <td className="px-6 py-4 text-right">
                       {product.stockQuantity ?? product.inventory}
                     </td>
@@ -337,7 +341,7 @@ export default function AdminProducts() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Price */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-white/40">Price ($)</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/40">Price (₱)</label>
                     <input
                       required
                       type="number"

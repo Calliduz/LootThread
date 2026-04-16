@@ -207,9 +207,17 @@ export const createOrder = async (data: {
 
 export const createPaymentIntent = async (data: {
   items: Array<{ productId: string; quantity: number }>;
+  promoCode?: string;
 }) => {
   const response = await axiosInstance.post('/orders/create-payment-intent', data);
-  return response.data as { clientSecret: string };
+  return response.data as {
+    clientSecret: string;
+    subtotal: number;
+    discountPercent: number;
+    discountAmount: number;
+    total: number;
+    appliedPromoCode: string | null;
+  };
 };
 
 export const getMyOrders = async () => {
@@ -254,6 +262,34 @@ export const subscribeNewsletter = async (email: string) => {
 
 export const broadcastNewsletter = async (data: { subject: string; message: string }) => {
   const response = await axiosInstance.post('/newsletter/broadcast', data);
+  return response.data;
+};
+
+// ---------------------------------------------------------------------------
+// PROMO CODES
+// ---------------------------------------------------------------------------
+export const validatePromoCode = async (code: string) => {
+  const response = await axiosInstance.post('/promo/validate', { code });
+  return response.data as { code: string; discountPercent: number; description?: string };
+};
+
+export const getAllPromoCodes = async () => {
+  const response = await axiosInstance.get('/promo');
+  return response.data;
+};
+
+export const createPromoCode = async (data: Partial<import('../types/api').PromoCode>) => {
+  const response = await axiosInstance.post('/promo', data);
+  return response.data;
+};
+
+export const updatePromoCode = async (id: string, data: Partial<import('../types/api').PromoCode>) => {
+  const response = await axiosInstance.put(`/promo/${id}`, data);
+  return response.data;
+};
+
+export const deletePromoCode = async (id: string) => {
+  const response = await axiosInstance.delete(`/promo/${id}`);
   return response.data;
 };
 

@@ -85,8 +85,8 @@ export default function Receipt() {
                   <p className="text-xs text-brand-primary/60 font-mono mt-0.5">Quantity: {item.quantity}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-black text-white">${(item.price * item.quantity).toFixed(2)}</p>
-                  <p className="text-[10px] text-white/20 font-mono">${item.price} ea</p>
+                  <p className="text-sm font-black text-white">₱{(item.price * item.quantity).toFixed(2)}</p>
+                  <p className="text-[10px] text-white/20 font-mono">₱{item.price} ea</p>
                 </div>
               </div>
             ))}
@@ -103,7 +103,7 @@ export default function Receipt() {
             </div>
             <div className="flex justify-between items-center pt-4 mt-2 border-t border-white/5">
               <span className="text-base font-black text-white uppercase tracking-tighter">Total Captured</span>
-              <span className="text-2xl font-black text-brand-primary italic tracking-tight">${order.totalAmount.toFixed(2)}</span>
+              <span className="text-2xl font-black text-brand-primary italic tracking-tight">₱{order.totalAmount.toFixed(2)}</span>
             </div>
           </div>
         </div>

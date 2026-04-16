@@ -15,7 +15,7 @@ interface NavbarProps {
 export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProps) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
-  const { products } = useProducts();
+  const { data: products = [] } = useProducts();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -47,8 +47,8 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
       </div>
 
       <div className="hidden lg:flex items-center gap-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
-        <button onClick={() => navigate('/marketplace?type=skin')} className="hover:text-brand-primary transition-all duration-300">Skins</button>
-        <button onClick={() => navigate('/marketplace?type=attachment')} className="hover:text-brand-primary transition-all duration-300">Attachments</button>
+        <button onClick={() => { navigate('/marketplace?type=skin'); onNavigate('skins'); }} className="hover:text-brand-primary transition-all duration-300">Skins</button>
+        <button onClick={() => { navigate('/marketplace?type=attachment'); onNavigate('attachments'); }} className="hover:text-brand-primary transition-all duration-300">Attachments</button>
         <button onClick={() => onNavigate('artists')} className="hover:text-brand-primary transition-all duration-300">Artists</button>
         {isAuthenticated && user?.role === 'customer' && (
           <button onClick={() => navigate('/account')} className="text-brand-primary hover:text-white transition-all duration-300">Dashboard</button>
@@ -67,6 +67,37 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
             className="bg-white/5 border border-white/10 rounded-2xl py-2.5 pl-12 pr-6 text-[10px] font-bold tracking-widest focus:outline-none focus:border-brand-primary/50 focus:bg-white/10 transition-all w-48 lg:w-72"
           />
+          {/* Desktop Search Suggestions Layered within nav */}
+          <AnimatePresence>
+            {isSearchFocused && suggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute top-full left-0 mt-2 bg-bg-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl z-[150] w-full"
+              >
+                {/* Results Mapping */}
+                <div className="flex flex-col py-2 max-h-[60vh] overflow-y-auto w-full">
+                  {suggestions.map(p => (
+                    <div 
+                      key={p.id}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors"
+                      onClick={() => {
+                        navigate('/marketplace');
+                        setTimeout(() => setSearchQuery(''), 100);
+                      }}
+                    >
+                      <img src={getAssetUrl(p.imageUrl || p.images?.[0])} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-black" />
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-white uppercase tracking-widest truncate">{p.name}</p>
+                        <p className="text-[10px] text-brand-primary">₱{p.price}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <button 
@@ -126,20 +157,6 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
           <Menu className="w-5 h-5" />
         </button>
       </div>
-
-      {/* Desktop Search Suggestions Layered within nav */}
-      <AnimatePresence>
-        {isSearchFocused && suggestions.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute top-full right-[200px] mt-2 bg-bg-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl z-50 w-72"
-          >
-            {/* ... simplified suggestions ... */}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </nav>
 
     {/* GLOBAL DRAWER - OUTSIDE NAV STACKING CONTEXT */}

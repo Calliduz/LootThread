@@ -30,7 +30,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[80]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000]"
           />
 
           {/* Drawer */}
@@ -39,7 +39,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-bg-card border-l border-white/10 z-[90] flex flex-col shadow-2xl"
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-bg-card border-l border-white/10 z-[1010] flex flex-col shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
@@ -107,7 +107,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-black uppercase tracking-wider text-white truncate">{item.name}</p>
-                        <p className="text-brand-primary text-sm font-black mt-0.5">${item.price.toFixed(2)}</p>
+                        <p className="text-brand-primary text-sm font-black mt-0.5">₱{item.price.toFixed(2)}</p>
 
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-2 mt-2">
@@ -135,7 +135,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                        <p className="text-[11px] font-bold text-white/60">${(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="text-[11px] font-bold text-white/60">₱{(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -148,7 +148,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <div className="flex-shrink-0 p-6 border-t border-white/10 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-widest text-white/60">Order Total</span>
-                  <span className="text-xl font-black text-brand-primary">${cartTotal.toFixed(2)}</span>
+                  <span className="text-xl font-black text-brand-primary">₱{cartTotal.toFixed(2)}</span>
                 </div>
                 <button
                   onClick={handleCheckout}

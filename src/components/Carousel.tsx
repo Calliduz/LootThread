@@ -75,7 +75,7 @@ export default function Carousel({ products, onProductClick }: CarouselProps) {
               <div className="flex flex-wrap items-center gap-10">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-1">Payload Value</span>
-                  <span className="text-4xl md:text-5xl font-black text-brand-primary tracking-tighter leading-none">${currentProduct.price}</span>
+                  <span className="text-4xl md:text-5xl font-black text-brand-primary tracking-tighter leading-none">₱{currentProduct.price}</span>
                 </div>
                 
                 <button 
