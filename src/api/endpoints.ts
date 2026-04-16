@@ -252,6 +252,11 @@ export const subscribeNewsletter = async (email: string) => {
   return response.data;
 };
 
+export const broadcastNewsletter = async (data: { subject: string; message: string }) => {
+  const response = await axiosInstance.post('/newsletter/broadcast', data);
+  return response.data;
+};
+
 // ---------------------------------------------------------------------------
 // UPLOAD
 // ---------------------------------------------------------------------------

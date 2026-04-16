@@ -13,6 +13,7 @@ import AdminCollections from './pages/admin/AdminCollections';
 import AdminCMS from './pages/admin/AdminCMS';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminNewsletter from './pages/admin/AdminNewsletter';
 
 // Storefront Pages
 import Login from './pages/storefront/Login';
@@ -27,8 +28,6 @@ import PrivacyPolicy from './pages/storefront/PrivacyPolicy';
 import TermsOfService from './pages/storefront/TermsOfService';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
-
-
 
 const CustomerRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -113,6 +112,7 @@ export default function App() {
             <Route path="artists" element={<AdminArtists />} />
             <Route path="cms" element={<AdminCMS />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="newsletter" element={<AdminNewsletter />} />
           </Route>
 
           {/* Catch-all */}

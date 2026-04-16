@@ -63,9 +63,9 @@ export default function AdminCMS() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black uppercase tracking-tight italic">
-            Storefront <span className="text-brand-primary">CMS</span>
+            Website <span className="text-brand-primary">MANAGER</span>
           </h1>
-          <p className="text-white/40 text-sm mt-1">Manage scrolling marquee and footer connectivity</p>
+          <p className="text-white/40 text-sm mt-1">Update global site announcements and social links</p>
         </div>
       </div>
       
@@ -126,14 +126,14 @@ function SimpleMarqueeCard({ cmsList, onSave }: { cmsList: CMSContent[], onSave:
           <Megaphone className="w-6 h-6" />
         </div>
         <div>
-          <h3 className="text-lg font-bold uppercase tracking-tight">Marquee Message</h3>
-          <p className="text-white/30 text-xs">The scrolling text at the top of the storefront</p>
+          <h3 className="text-lg font-bold uppercase tracking-tight">Main Announcement Bar</h3>
+          <p className="text-white/30 text-xs">The sliding text displayed at the very top of your site</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-3 space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-white/30">Scrolling Announcement</label>
+          <label className="text-[10px] font-black uppercase tracking-widest text-white/30">Display Text</label>
           <textarea 
             value={text}
             onChange={e => setText(e.target.value)}
@@ -142,7 +142,7 @@ function SimpleMarqueeCard({ cmsList, onSave }: { cmsList: CMSContent[], onSave:
           />
         </div>
         <div className="space-y-2 text-center md:text-left">
-          <label className="text-[10px] font-black uppercase tracking-widest text-white/30 text-center block">Speed (sec)</label>
+          <label className="text-[10px] font-black uppercase tracking-widest text-white/30 text-center block">Duration (sec)</label>
           <div className="flex flex-col items-center justify-center h-32 bg-black/40 border border-white/10 rounded-2xl p-4 space-y-2">
              <input 
                type="number" 
@@ -152,7 +152,7 @@ function SimpleMarqueeCard({ cmsList, onSave }: { cmsList: CMSContent[], onSave:
                onChange={e => setSpeed(Number(e.target.value))}
                className="bg-transparent text-2xl font-black text-brand-primary text-center w-full outline-none"
              />
-             <p className="text-[9px] uppercase font-bold text-white/20">Lower = Faster</p>
+             <p className="text-[9px] uppercase font-bold text-white/20">More = Slower</p>
           </div>
         </div>
       </div>
@@ -163,7 +163,7 @@ function SimpleMarqueeCard({ cmsList, onSave }: { cmsList: CMSContent[], onSave:
         className="w-full py-4 bg-white/5 hover:bg-brand-primary hover:text-black border border-white/5 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
       >
         {saving && <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />}
-        Apply Changes
+        Publish Changes
       </button>
     </div>
   );
@@ -273,7 +273,7 @@ function SimpleSocialsCard({ cmsList, onSave }: { cmsList: CMSContent[], onSave:
         className="w-full py-4 bg-white/5 hover:bg-brand-primary hover:text-black border border-white/5 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
       >
         {saving && <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />}
-        Save Connectivity
+        Update Social Links
       </button>
     </div>
   );
