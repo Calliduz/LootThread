@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, User, Search, Menu, Zap, X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
+import { useProducts } from '../hooks/useApi';
+import { getAssetUrl } from '../utils/assetHelper';
 import { useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
@@ -12,6 +14,9 @@ interface NavbarProps {
 
 export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [isSearchFocused, setIsSearchFocused] = React.useState(false);
+  const { data: products = [] } = useProducts();
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -19,6 +24,15 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
     logout();
     navigate('/');
   };
+
+  const suggestions = searchQuery.trim().length >= 2
+    ? products
+        .filter(p => 
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          p.description.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .slice(0, 5)
+    : [];
 
   return (
     <nav className="sticky top-0 z-50 w-full glass border-b border-white/10 px-4 md:px-8 py-4 flex items-center justify-between">
@@ -52,8 +66,70 @@ export default function Navbar({ cartCount, onOpenCart, onNavigate }: NavbarProp
           <input 
             type="text" 
             placeholder="SEARCH THE VOID..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                navigate(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
+                setIsSearchFocused(false);
+              }
+            }}
             className="bg-white/5 border border-white/10 rounded-2xl py-2.5 pl-12 pr-6 text-[10px] font-bold tracking-widest focus:outline-none focus:border-brand-primary/50 focus:bg-white/10 transition-all w-48 lg:w-72"
           />
+
+          {/* Search Suggestions Dropdown */}
+          <AnimatePresence>
+            {isSearchFocused && suggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-bg-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl z-50"
+              >
+                <div className="p-2 space-y-1">
+                  {suggestions.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => {
+                        navigate(`/marketplace?search=${encodeURIComponent(product.name)}`);
+                        setSearchQuery(product.name);
+                      }}
+                      className="w-full flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-all group text-left"
+                    >
+                      <div className="w-12 h-12 rounded-lg bg-black/40 border border-white/5 p-1 overflow-hidden">
+                        <img 
+                          src={getAssetUrl(product.imageUrl || product.images?.[0] || '')} 
+                          alt={product.name}
+                          className="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[11px] font-black uppercase tracking-tight truncate group-hover:text-brand-primary transition-colors">
+                          {product.name}
+                        </div>
+                        <div className="text-[9px] uppercase tracking-widest text-white/30 font-bold">
+                          {product.type} // {product.category || 'Gear'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] font-mono font-bold text-brand-primary">
+                          ${product.price}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                  <button 
+                    onClick={() => navigate(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`)}
+                    className="w-full py-3 text-[9px] font-black uppercase tracking-[0.2em] text-white/20 hover:text-white border-t border-white/5 transition-all"
+                  >
+                    View All Results <ArrowRight className="inline-block ml-2 w-3 h-3" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         
         <button 

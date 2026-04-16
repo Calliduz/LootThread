@@ -88,6 +88,11 @@ export const getArtists = async () => {
   return response.data;
 };
 
+export const getArtistsAdmin = async () => {
+  const response = await axiosInstance.get<Artist[]>('/artists/admin/all');
+  return response.data;
+};
+
 export const getArtistById = async (id: string) => {
   const response = await axiosInstance.get<Artist>(`/artists/${id}`);
   return response.data;

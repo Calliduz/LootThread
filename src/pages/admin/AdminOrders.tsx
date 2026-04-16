@@ -2,9 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { getAllOrders, updateOrderStatus } from '../../api/endpoints';
 import {
   Loader2, AlertTriangle, Package, ChevronDown,
-  X, CheckCircle, Clock, XCircle, RefreshCw, Eye,
+  X, CheckCircle, Clock, XCircle, RefreshCw, Eye, Search
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { SkeletonRow } from '../../components/Skeleton';
+import { getAssetUrl } from '../../utils/assetHelper';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface OrderItem {
@@ -51,52 +53,91 @@ function useToast() {
 // ── Items Modal ───────────────────────────────────────────────────────────────
 function OrderItemsModal({ order, onClose }: { order: Order; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-bg-card border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/90 backdrop-blur-md" 
+        onClick={onClose} 
+      />
+      
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="relative bg-bg-card border border-white/10 rounded-[2.5rem] p-8 w-full max-w-xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] z-10"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-sm font-black uppercase tracking-widest text-white">Order Items</h2>
-            <p className="text-[10px] text-white/30 font-mono mt-0.5">#{order._id.slice(-8).toUpperCase()}</p>
+            <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">
+              Tactical <span className="text-brand-primary">Manifest</span>
+            </h2>
+            <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mt-1">TRANSACTION ID: {order._id.toUpperCase()}</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
-            <X className="w-4 h-4 text-white/50" />
+          <button 
+            onClick={onClose} 
+            className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all hover:rotate-90"
+          >
+            <X className="w-6 h-6 text-white/50" />
           </button>
         </div>
 
         {/* Items */}
-        <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
           {order.items.map((item, i) => (
-            <div key={i} className="flex items-center gap-4 bg-white/[0.03] border border-white/5 rounded-xl p-3">
-              <div className="w-14 h-14 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center">
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="flex items-center gap-5 bg-white/[0.03] border border-white/5 rounded-2xl p-4 group hover:bg-white/[0.05] hover:border-white/10 transition-all"
+            >
+              <div className="w-16 h-16 rounded-xl overflow-hidden bg-black border border-white/10 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                 {item.imageUrl
-                  ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                  : <Package className="w-5 h-5 text-brand-primary/30" />
+                  ? <img src={getAssetUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" />
+                  : <Package className="w-6 h-6 text-brand-primary/30" />
                 }
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">{item.name}</p>
-                <p className="text-[10px] text-white/40 mt-0.5">Qty: {item.quantity}</p>
+                <p className="text-sm font-black text-white uppercase tracking-wide truncate">{item.name}</p>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-[10px] text-white/40 font-bold uppercase">Qty: {item.quantity}</span>
+                  <span className="w-1 h-1 rounded-full bg-white/10" />
+                  <span className="text-[10px] text-brand-primary/60 font-bold uppercase tracking-tighter">Unit: ${item.price.toFixed(2)}</span>
+                </div>
               </div>
-              <p className="text-sm font-black text-brand-primary flex-shrink-0">
+              <p className="text-lg font-black text-white flex-shrink-0">
                 ${(item.price * item.quantity).toFixed(2)}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/10">
-          <div className="space-y-0.5">
-            {order.gameTag && <p className="text-[10px] text-white/30 font-mono">Tag: {order.gameTag}</p>}
-            <p className="text-[10px] text-white/30 font-mono">
-              {order.userId?.email ?? 'Guest'}
-            </p>
+        <div className="flex flex-col gap-6 mt-8 pt-6 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-[10px] text-white/30 font-black uppercase tracking-widest">Customer Intel</p>
+              <p className="text-xs font-bold text-white/80">{order.userId?.name ?? 'Guest User'}</p>
+              <p className="text-[10px] text-white/40 font-mono">{order.userId?.email ?? 'System ID'}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-brand-primary/60 font-black uppercase tracking-widest mb-1">Total Valuation</p>
+              <p className="text-4xl font-black text-brand-primary tracking-tighter">${order.totalAmount.toFixed(2)}</p>
+            </div>
           </div>
-          <p className="text-xl font-black text-brand-primary">${order.totalAmount.toFixed(2)}</p>
+          
+          <button 
+            onClick={onClose}
+            className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+          >
+            Acknowledge Receipt
+          </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -218,73 +259,76 @@ export default function AdminOrders() {
               const isUpdating = updating === order._id;
 
               return (
-                <div
+                <motion.div
                   key={order._id}
-                  className="grid grid-cols-1 lg:grid-cols-[2fr_2fr_1.5fr_1fr_1.5fr_2fr_auto] gap-4 items-center px-6 py-4 hover:bg-white/[0.02] transition-colors"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.03)" }}
+                  className="grid grid-cols-1 lg:grid-cols-[2fr_2fr_1.5fr_1fr_1.5fr_2fr_auto] gap-4 items-center px-6 py-5 transition-colors group cursor-default"
                 >
                   {/* Order ID */}
                   <div>
-                    <p className="text-[10px] font-mono text-white/30 lg:hidden mb-0.5">Order ID</p>
-                    <p className="text-xs font-mono text-white/60">#{order._id.slice(-8).toUpperCase()}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/20 lg:hidden mb-1">Order ID</p>
+                    <p className="text-xs font-mono font-bold text-white/40 group-hover:text-brand-primary transition-colors tracking-tighter">#{order._id.toUpperCase()}</p>
                   </div>
 
                   {/* Customer */}
                   <div>
-                    <p className="text-[10px] font-mono text-white/30 lg:hidden mb-0.5">Customer</p>
-                    <p className="text-xs font-bold text-white truncate">{order.userId?.name ?? 'Unknown'}</p>
-                    <p className="text-[10px] text-white/30 font-mono truncate">{order.userId?.email ?? 'Guest'}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/20 lg:hidden mb-1">Customer</p>
+                    <p className="text-sm font-black text-white truncate group-hover:translate-x-1 transition-transform">{order.userId?.name ?? 'Anonymous User'}</p>
+                    <p className="text-[10px] text-white/30 font-mono truncate">{order.userId?.email ?? 'guest_session_active'}</p>
                   </div>
 
                   {/* Date */}
                   <div>
-                    <p className="text-[10px] font-mono text-white/30 lg:hidden mb-0.5">Date</p>
-                    <p className="text-xs text-white/60">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/20 lg:hidden mb-1">Timestamp</p>
+                    <p className="text-xs font-bold text-white/60">
                       {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
-                    <p className="text-[10px] text-white/30">
+                    <p className="text-[10px] text-white/30 font-black uppercase tracking-widest">
                       {new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
 
                   {/* Total */}
                   <div>
-                    <p className="text-[10px] font-mono text-white/30 lg:hidden mb-0.5">Total</p>
-                    <p className="text-sm font-black text-brand-primary">${order.totalAmount.toFixed(2)}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/20 lg:hidden mb-1">Valuation</p>
+                    <p className="text-lg font-black text-brand-primary tracking-tighter">${order.totalAmount.toFixed(2)}</p>
                   </div>
 
                   {/* Game Tag */}
                   <div>
-                    <p className="text-[10px] font-mono text-white/30 lg:hidden mb-0.5">Game Tag</p>
-                    <p className="text-xs font-mono text-white/50">{order.gameTag || '—'}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/20 lg:hidden mb-1">Sector Tag</p>
+                    <p className="text-xs font-black text-white/40 uppercase tracking-widest">{order.gameTag || '—'}</p>
                   </div>
 
                   {/* Status Select */}
                   <div>
-                    <p className="text-[10px] font-mono text-white/30 lg:hidden mb-0.5">Status</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/20 lg:hidden mb-1">Current Status</p>
                     <div className="relative">
                       {isUpdating ? (
-                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold ${statusCfg.color}`}>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          Updating...
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest ${statusCfg.color}`}>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Syncing...
                         </div>
                       ) : (
-                        <div className="relative inline-block w-full max-w-[160px]">
-                          <div className={`absolute inset-y-0 left-3 flex items-center pointer-events-none`}>
-                            <StatusIcon className={`w-3 h-3 ${statusCfg.color.split(' ')[0]}`} />
+                        <div className="relative inline-block w-full max-w-[180px]">
+                          <div className={`absolute inset-y-0 left-3.5 flex items-center pointer-events-none`}>
+                            <StatusIcon className={`w-3.5 h-3.5 ${statusCfg.color.split(' ')[0]}`} />
                           </div>
                           <select
                             value={order.status}
                             onChange={e => handleStatusChange(order._id, e.target.value)}
-                            className={`w-full appearance-none pl-7 pr-7 py-1.5 rounded-lg border text-xs font-bold cursor-pointer focus:outline-none transition-colors ${statusCfg.color} bg-transparent`}
+                            className={`w-full appearance-none pl-10 pr-8 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest cursor-pointer focus:outline-none transition-all hover:brightness-110 active:scale-95 ${statusCfg.color} bg-black/40`}
                           >
                             {STATUS_OPTIONS.map(s => (
-                              <option key={s} value={s} className="bg-bg-dark text-white capitalize">
-                                {s.charAt(0).toUpperCase() + s.slice(1)}
+                              <option key={s} value={s} className="bg-bg-dark text-white uppercase font-black">
+                                {s}
                               </option>
                             ))}
                           </select>
-                          <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-                            <ChevronDown className="w-3 h-3 text-white/40" />
+                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                            <ChevronDown className="w-4 h-4 text-white/20" />
                           </div>
                         </div>
                       )}
@@ -295,14 +339,14 @@ export default function AdminOrders() {
                   <div>
                     <button
                       onClick={() => setExpandedOrder(order)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white/50 hover:text-white transition-colors"
-                      title="View items"
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-brand-primary hover:text-black border border-white/10 hover:border-brand-primary text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 group/btn"
+                      title="Inspect components"
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span className="hidden xl:inline">Items</span>
+                      <Eye className="w-4 h-4" />
+                      <span className="hidden xl:inline">Inspect</span>
                     </button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -310,9 +354,11 @@ export default function AdminOrders() {
       )}
 
       {/* Items Modal */}
-      {expandedOrder && (
-        <OrderItemsModal order={expandedOrder} onClose={() => setExpandedOrder(null)} />
-      )}
+      <AnimatePresence>
+        {expandedOrder && (
+          <OrderItemsModal order={expandedOrder} onClose={() => setExpandedOrder(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

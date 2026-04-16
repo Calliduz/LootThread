@@ -8,9 +8,11 @@ import CartDrawer from '../../components/storefront/CartDrawer';
 import toast from 'react-hot-toast';
 import {
   LogOut, User as UserIcon, Package, Settings, ShieldAlert,
-  ShoppingBag, CheckCircle, KeyRound, ChevronDown, Eye, EyeOff,
+  ShoppingBag, CheckCircle, KeyRound, ChevronDown, Eye, EyeOff, Clock, XCircle, RefreshCw, AlertTriangle
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Skeleton } from '../../components/Skeleton';
+import { getAssetUrl } from '../../utils/assetHelper';
 
 interface OrderItem {
   name: string;
@@ -125,14 +127,24 @@ export default function Account() {
     }
   };
 
-  const statusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-brand-primary border-brand-primary/20 bg-brand-primary/10';
-      case 'pending':   return 'text-yellow-400 border-yellow-400/20 bg-yellow-400/10';
-      case 'cancelled': return 'text-red-400 border-red-400/20 bg-red-400/10';
-      default:          return 'text-white/40 border-white/10 bg-white/5';
-    }
+const OrderBadge = ({ status }: { status: string }) => {
+  const config: Record<string, { label: string; icon: any; class: string }> = {
+    completed:  { label: 'Completed', icon: CheckCircle, class: 'text-brand-primary border-brand-primary/20 bg-brand-primary/10' },
+    pending:    { label: 'Pending',   icon: Clock,        class: 'text-yellow-400 border-yellow-400/20 bg-yellow-400/10' },
+    processing: { label: 'Processing',icon: RefreshCw,    class: 'text-blue-400 border-blue-400/20 bg-blue-400/10' },
+    cancelled:  { label: 'Cancelled', icon: XCircle,      class: 'text-red-400 border-red-400/20 bg-red-400/10' },
   };
+
+  const current = config[status.toLowerCase()] || { label: status, icon: AlertTriangle, class: 'text-white/40 border-white/10 bg-white/5' };
+  const Icon = current.icon;
+
+  return (
+    <span className={`px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 ${current.class}`}>
+      <Icon className="w-3 h-3" />
+      {current.label}
+    </span>
+  );
+};
 
   return (
     <div className="min-h-screen bg-bg-dark">
@@ -231,47 +243,58 @@ export default function Account() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {orders.map(order => (
-                    <div key={order._id} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <ShoppingBag className="w-4 h-4 text-brand-primary/60" />
-                            <span className="text-[10px] font-mono text-white/30 truncate">#{order._id.slice(-8).toUpperCase()}</span>
-                          </div>
-                          <p className="text-[10px] text-white/20 font-mono">
-                            {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                          {order.gameTag && (
-                            <p className="text-[10px] text-white/40 font-mono">Tag: {order.gameTag}</p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className={`px-2 py-0.5 rounded-lg border text-[10px] font-black uppercase tracking-wider ${statusColor(order.status)}`}>
-                            <CheckCircle className="w-2.5 h-2.5 inline mr-1" />
-                            {order.status}
-                          </span>
-                          <span className="text-brand-primary font-black text-sm">${order.totalAmount.toFixed(2)}</span>
-                        </div>
-                      </div>
+                  <AnimatePresence mode="popLayout">
+                    {orders.map((order, index) => (
+                      <motion.div
+                        key={order._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.4, delay: index * 0.05 }}
+                        className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-4 relative overflow-hidden group hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300 shadow-lg"
+                      >
+                        {/* Glow effect on hover */}
+                        <div className="absolute inset-0 bg-brand-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-                      <div className="space-y-2 border-t border-white/5 pt-4">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                              {item.imageUrl
-                                ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                                : <Package className="w-3.5 h-3.5 text-brand-primary/40" />
-                              }
+                        <div className="flex items-start justify-between gap-4 relative z-10">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <ShoppingBag className="w-4 h-4 text-brand-primary" />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-white/50 truncate">Order #{order._id.slice(-8).toUpperCase()}</span>
                             </div>
-                            <p className="text-xs text-white/60 flex-1">{item.name}</p>
-                            <span className="text-[10px] text-white/30">×{item.quantity}</span>
-                            <span className="text-xs font-bold text-white">${(item.price * item.quantity).toFixed(2)}</span>
+                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">
+                              {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </p>
+                            {order.gameTag && (
+                              <p className="text-[10px] text-brand-primary/60 font-black uppercase tracking-tighter mt-1">GamerTag: {order.gameTag}</p>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                          <div className="flex flex-col items-end gap-2">
+                            <OrderBadge status={order.status} />
+                            <span className="text-xl font-black text-brand-primary tracking-tighter">${order.totalAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 border-t border-white/5 pt-4 relative z-10">
+                          {order.items.map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-4 bg-black/20 p-2 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                              <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex-shrink-0 overflow-hidden flex items-center justify-center group-hover:scale-105 transition-transform">
+                                {item.imageUrl
+                                  ? <img src={getAssetUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" />
+                                  : <Package className="w-5 h-5 text-brand-primary/30" />
+                                }
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-xs font-bold text-white uppercase tracking-wide truncate">{item.name}</p>
+                                <span className="text-[10px] text-white/40 font-bold uppercase">Qty: {item.quantity}</span>
+                              </div>
+                              <span className="text-xs font-black text-white/80">${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               )}
             </div>

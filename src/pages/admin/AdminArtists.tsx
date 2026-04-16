@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Artist } from '../../types/api';
 import {
-  getArtists, createArtist, updateArtist, deleteArtist
+  getArtistsAdmin, createArtist, updateArtist, deleteArtist
 } from '../../api/endpoints';
 import { Plus, Edit2, Trash2, X, User as UserIcon } from 'lucide-react';
 import { SkeletonRow } from '../../components/Skeleton';
@@ -10,6 +11,7 @@ import { getAssetUrl } from '../../utils/assetHelper';
 import toast from 'react-hot-toast';
 
 export default function AdminArtists() {
+  const queryClient = useQueryClient();
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,7 +33,7 @@ export default function AdminArtists() {
     setLoading(true);
     setError('');
     try {
-      const data = await getArtists();
+      const data = await getArtistsAdmin();
       setArtists(data);
     } catch (err: any) {
       console.error(err);
@@ -77,6 +79,7 @@ export default function AdminArtists() {
     try {
       await deleteArtist(id);
       setArtists(prev => prev.filter(a => a.id !== id));
+      queryClient.invalidateQueries({ queryKey: ['artists'] });
       toast.success('Artist deleted.');
     } catch {
       toast.error('Failed to delete artist.');
@@ -102,6 +105,7 @@ export default function AdminArtists() {
       
       handleCloseModal();
       toast.success(editingArtist ? 'Artist updated.' : 'Artist created.');
+      queryClient.invalidateQueries({ queryKey: ['artists'] });
       await fetchData();
     } catch {
       toast.error('Failed to save artist.');

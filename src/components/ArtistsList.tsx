@@ -36,12 +36,18 @@ export default function ArtistsList() {
           >
             <div className="flex items-center gap-6 mb-8">
               <div className="relative">
-                <img 
-                  src={getAssetUrl(artist.avatar)} 
-                  alt={artist.name} 
-                  className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 p-2 group-hover:scale-110 transition-transform duration-500"
-                  referrerPolicy="no-referrer"
-                />
+                {artist.imageUrl || artist.avatar ? (
+                  <img 
+                    src={getAssetUrl(artist.imageUrl || artist.avatar || '')} 
+                    alt={artist.name} 
+                    className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 p-2 group-hover:scale-110 transition-transform duration-500 object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2 group-hover:scale-110 transition-transform duration-500">
+                    <Zap className="w-8 h-8 text-white/10" />
+                  </div>
+                )}
                 <div className="absolute -bottom-2 -right-2 bg-brand-accent p-1.5 rounded-lg text-white">
                   <Zap className="w-3 h-3 fill-current" />
                 </div>
