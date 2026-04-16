@@ -112,13 +112,12 @@ export default function Storefront() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Marquee />
       <Navbar 
         cartCount={cartCount} 
         onOpenCart={() => setIsCartOpen(true)} 
         onNavigate={(v) => v === 'dashboard' ? (localStorage.getItem('token') ? handleNavigate('dashboard') : setIsLoginOpen(true)) : handleNavigate(v)}
       />
-
-      <Marquee />
 
       {isError ? (
         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-bg-dark">
@@ -192,7 +191,7 @@ export default function Storefront() {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[400px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[400px]">
                   <AnimatePresence mode="popLayout">
                     {isLoading ? (
                       [...Array(8)].map((_, i) => <ProductSkeleton key={i} />)

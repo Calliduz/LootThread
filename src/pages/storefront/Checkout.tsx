@@ -228,10 +228,10 @@ function CheckoutForm({ savedAddresses, cartSnapshot }: { savedAddresses: Delive
         )}
 
         <form onSubmit={handlePurchase}>
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="flex flex-col lg:grid lg:grid-cols-5 gap-8">
 
-            {/* Left column */}
-            <div className="lg:col-span-3 space-y-6">
+            {/* Left column — Payment & Address */}
+            <div className="order-2 lg:order-1 lg:col-span-3 space-y-6">
 
               {/* Delivery Address */}
               <div className="bg-bg-card border border-white/5 rounded-3xl p-6">
@@ -300,7 +300,7 @@ function CheckoutForm({ savedAddresses, cartSnapshot }: { savedAddresses: Delive
             </div>
 
             {/* Right column — Order Summary */}
-            <div className="lg:col-span-2">
+            <div className="order-1 lg:order-2 lg:col-span-2">
               <div className="bg-bg-card border border-white/5 rounded-3xl p-6 sticky top-28">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center">

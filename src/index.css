@@ -14,8 +14,8 @@
 }
 
 @layer base {
-  body {
-    @apply bg-bg-dark text-white font-sans antialiased;
+  html, body {
+    @apply bg-bg-dark text-white font-sans antialiased overflow-x-hidden w-full;
   }
 
   /* Custom Scrollbar */
