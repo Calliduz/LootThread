@@ -10,6 +10,8 @@ interface Stats {
   totalProducts: number;
   totalUsers: number;
   recentOrders: any[];
+  monthlyRevenue: Array<{ _id: string; revenue: number }>;
+  topProducts: Array<{ _id: string; sales: number; revenue: number }>;
 }
 
 interface StatCardProps {
@@ -148,23 +150,84 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Critical Alerts */}
-      {products.filter(p => (p.stockQuantity ?? 0) < 5).length > 0 && (
-        <div className="bg-red-500/5 border border-red-500/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-red-400" />
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Revenue Performance Chart */}
+        <div className="bg-bg-card border border-white/5 rounded-3xl p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-brand-primary" />
+              </div>
+              <h2 className="text-sm font-black uppercase tracking-widest text-white">Revenue Performance</h2>
             </div>
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-widest text-white">Low Stock Alert</h3>
-              <p className="text-xs text-white/40 mt-1">{products.filter(p => (p.stockQuantity ?? 0) < 5).length} products are running critically low on inventory.</p>
-            </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">Last 6 Months</span>
           </div>
-          <a href="/admin/products" className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-            Restock Now
-          </a>
+
+          <div className="flex items-end justify-between h-48 gap-4 px-4">
+            {stats?.monthlyRevenue?.length === 0 ? (
+              <div className="w-full flex items-center justify-center text-white/10 text-[10px] uppercase font-bold tracking-[0.2em]">Insufficent Data</div>
+            ) : stats?.monthlyRevenue.map((month) => {
+              const maxRev = Math.max(...stats.monthlyRevenue.map(m => m.revenue), 1);
+              const height = (month.revenue / maxRev) * 100;
+              return (
+                <div key={month._id} className="flex-1 flex flex-col items-center gap-4 group">
+                  <div className="relative w-full flex items-end justify-center">
+                    <div 
+                      className="w-full bg-brand-primary/10 rounded-t-xl group-hover:bg-brand-primary/20 transition-all duration-500 relative overflow-hidden border-t border-brand-primary/30"
+                      style={{ height: `${height}%` }}
+                    >
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
+                    </div>
+                    {/* Tooltip */}
+                    <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-primary text-black text-[9px] font-black px-2 py-1 rounded-md shadow-[0_0_20px_rgba(0,255,204,0.4)] z-10 whitespace-nowrap">
+                      ₱{month.revenue.toLocaleString()}
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-white/20 group-hover:text-white/60 transition-colors">{month._id}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      )}
+
+        {/* Top Acquisitions */}
+        <div className="bg-bg-card border border-white/5 rounded-3xl p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-8 h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center">
+              <Package className="w-4 h-4 text-brand-primary" />
+            </div>
+            <h2 className="text-sm font-black uppercase tracking-widest text-white">Top Acquisitions</h2>
+          </div>
+
+          <div className="space-y-6">
+            {stats?.topProducts?.length === 0 ? (
+              <div className="py-12 text-center text-white/10 text-[10px] uppercase font-bold tracking-[0.2em]">Zero Acquisitions Detected</div>
+            ) : stats?.topProducts.map((p, i) => (
+              <div key={p._id} className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-xs font-black text-white/20 border border-white/5">
+                    0{i + 1}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white uppercase tracking-tight">{p._id}</p>
+                    <p className="text-[9px] text-white/30 uppercase tracking-widest font-black">{p.sales} Units Dispatched</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-black text-brand-primary">₱{p.revenue.toLocaleString()}</p>
+                  <div className="w-24 h-1 bg-white/5 rounded-full mt-2 overflow-hidden">
+                    <div 
+                      className="h-full bg-brand-primary shadow-[0_0_10px_rgba(0,255,204,0.3)]" 
+                      style={{ width: `${(p.sales / Math.max(...stats!.topProducts.map(tp => tp.sales))) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Recent Transactions Table */}
       <div className="bg-bg-card border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
