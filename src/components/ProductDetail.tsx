@@ -3,18 +3,23 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, ArrowLeft, Star, Zap, Shield, Truck, RotateCcw, Send, MessageSquare, User as UserIcon } from 'lucide-react';
 import { Product } from '../types/api';
 import { getAssetUrl } from '../utils/assetHelper';
-import { getRelatedProducts } from '../api/endpoints';
+import { getRelatedProducts, getProductReviews, addReview } from '../api/endpoints';
+import { useAuth } from '../contexts/AuthContext';
+import toast from 'react-hot-toast';
 import ProductCard from './ProductCard';
 import ProductSkeleton from './ProductSkeleton';
 
 interface Review {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
+  _id: string;
+  userId: {
+    _id: string;
+    name: string;
+    avatarUrl?: string;
+  };
   rating: number;
   comment: string;
-  createdAt: any;
+  isVerified?: boolean;
+  createdAt: string;
 }
 
 interface ProductDetailProps {
@@ -32,16 +37,16 @@ export default function ProductDetail({
   onAddToCart, 
   onProductClick 
 }: ProductDetailProps) {
-  const [user, setUser] = useState<any>(() => {
-    const saved = localStorage.getItem('artist');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState<number>(5.0);
+  const [totalReviews, setTotalReviews] = useState<number>(0);
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   // Recommendation Logic
   React.useEffect(() => {
@@ -50,11 +55,44 @@ export default function ProductDetail({
       .then(data => setRelatedProducts(data))
       .catch(console.error)
       .finally(() => setLoadingRelated(false));
+    
+    // Fetch Reviews
+    setLoadingReviews(true);
+    getProductReviews(product.id)
+      .then(data => {
+        setReviews(data.reviews);
+        setAverageRating(data.averageRating);
+        setTotalReviews(data.totalReviews);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingReviews(false));
   }, [product.id]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Review system is temporarily offline for tactical maintenance.');
+    if (!user) return;
+    
+    setIsSubmitting(true);
+    try {
+      await addReview({
+        productId: product.id,
+        rating: newRating,
+        comment: newComment
+      });
+      toast.success('Review transmitted successfully.');
+      setNewComment('');
+      setNewRating(5);
+      
+      // Refresh reviews
+      const data = await getProductReviews(product.id);
+      setReviews(data.reviews);
+      setAverageRating(data.averageRating);
+      setTotalReviews(data.totalReviews);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to transmit review.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const averageRating = '5.0';
@@ -103,10 +141,10 @@ export default function ProductDetail({
             {[...Array(5)].map((_, i) => (
               <Star 
                 key={i} 
-                className={`w-4 h-4 ${i < Math.round(Number(averageRating)) ? 'fill-current' : 'text-white/10'}`} 
+                className={`w-4 h-4 ${i < Math.round(averageRating) ? 'fill-current' : 'text-white/10'}`} 
               />
             ))}
-            <span className="text-xs font-mono font-bold ml-2 text-white/60">{averageRating} ({reviews.length} Reviews)</span>
+            <span className="text-xs font-mono font-bold ml-2 text-white/60">{averageRating.toFixed(1)} ({totalReviews} Reviews)</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter mb-6 leading-none">
@@ -241,9 +279,13 @@ export default function ProductDetail({
         {/* Reviews List */}
         <div className="space-y-8">
           <AnimatePresence mode="popLayout">
-            {reviews.map((review) => (
+            {loadingReviews ? (
+               [...Array(3)].map((_, i) => (
+                 <div key={`review-skele-${i}`} className="h-32 w-full bg-white/5 rounded-3xl animate-pulse" />
+               ))
+            ) : reviews.map((review) => (
               <motion.div
-                key={review.id}
+                key={review._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -252,13 +294,20 @@ export default function ProductDetail({
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-4">
                     <img 
-                      src={getAssetUrl(review.userAvatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${review.userId}`} 
-                      alt={review.userName} 
+                      src={review.userId?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${review.userId?._id}`} 
+                      alt={review.userId?.name} 
                       className="w-10 h-10 rounded-lg border border-white/10"
                       referrerPolicy="no-referrer"
                     />
                     <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-white/80">{review.userName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-black uppercase tracking-widest text-white/80">{review.userId?.name}</p>
+                        {review.isVerified && (
+                          <div className="bg-brand-primary/10 text-brand-primary text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter border border-brand-primary/20">
+                            Verified Buyer
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 mt-1">
                         {[...Array(5)].map((_, i) => (
                           <Star 
@@ -270,7 +319,7 @@ export default function ProductDetail({
                     </div>
                   </div>
                   <span className="text-[10px] font-mono text-white/20">
-                    {review.createdAt?.toDate().toLocaleDateString()}
+                    {new Date(review.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <p className="text-sm text-white/60 leading-relaxed italic">

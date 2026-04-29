@@ -13,6 +13,7 @@ import Marquee from './components/storefront/Marquee';
 import Footer from './components/storefront/Footer';
 import Newsletter from './components/storefront/Newsletter';
 import ProductDetail from './components/ProductDetail';
+import DiscoveryHub from './components/storefront/DiscoveryHub';
 
 import { Product } from './types/api';
 import LoginModal from './components/LoginModal';
@@ -25,6 +26,7 @@ export default function Storefront() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { data: fetchedProducts, isLoading, isError } = useProducts();
   const [filter, setFilter] = useState<'all' | 'skin' | 'attachment'>('all');
+  const [sortOption, setSortOption] = useState<string>('newest');
   const [isFiltering, setIsFiltering] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -120,23 +122,31 @@ export default function Storefront() {
 
   const searchQuery = searchParams.get('search')?.toLowerCase() || '';
 
-  const filteredProducts = products.filter(p => {
-        const typeMatch = filter === 'all' || p.type === filter || p.category === filter;
-        const tagMatch = filter !== 'all' && (p.tags?.some(tag => 
-          tag.toLowerCase().includes(filter) || 
-          (filter === 'skin' && tag.toLowerCase().includes('skins')) ||
-          (filter === 'attachment' && tag.toLowerCase().includes('attachments'))
-        ));
-        const passFilter = filter === 'all' || typeMatch || tagMatch;
-        
-        if (searchQuery && passFilter) {
-          const titleMatch = (p.name || p.title || '').toLowerCase().includes(searchQuery);
-          const descMatch = (p.description || '').toLowerCase().includes(searchQuery);
-          return titleMatch || descMatch;
-        }
-        
-        return passFilter;
-      });
+  const filteredProducts = products
+    .filter(p => {
+      const typeMatch = filter === 'all' || p.type === filter || p.category === filter;
+      const tagMatch = filter !== 'all' && (p.tags?.some(tag => 
+        tag.toLowerCase().includes(filter) || 
+        (filter === 'skin' && tag.toLowerCase().includes('skins')) ||
+        (filter === 'attachment' && tag.toLowerCase().includes('attachments'))
+      ));
+      const passFilter = filter === 'all' || typeMatch || tagMatch;
+      
+      if (searchQuery && passFilter) {
+        const titleMatch = (p.name || p.title || '').toLowerCase().includes(searchQuery);
+        const descMatch = (p.description || '').toLowerCase().includes(searchQuery);
+        return titleMatch || descMatch;
+      }
+      
+      return passFilter;
+    })
+    .sort((a, b) => {
+      if (sortOption === 'price-low') return a.price - b.price;
+      if (sortOption === 'price-high') return b.price - a.price;
+      if (sortOption === 'name-asc') return (a.name || '').localeCompare(b.name || '');
+      // newest is default
+      return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
+    });
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -205,28 +215,35 @@ export default function Storefront() {
 
               {/* Marketplace */}
               <section id="marketplace" className="px-6 lg:px-12 py-24 bg-bg-dark relative">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-                  <div>
+                <div className="max-w-7xl mx-auto">
+                  <div className="mb-12">
                     <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-4">
                       The <span className="text-brand-primary">Marketplace</span>
                     </h2>
-                    <div className="flex items-center gap-4">
-                      {['all', 'skin', 'attachment'].map(t => (
-                        <button key={t} onClick={() => setFilter(t as any)} className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition-all ${filter === t ? 'bg-brand-primary text-black' : 'bg-white/5 text-white/40'}`}>
-                          {t}
-                        </button>
-                      ))}
-                    </div>
+                    <DiscoveryHub 
+                      searchQuery={searchQuery}
+                      onSearchChange={(q) => setSearchParams(q ? { search: q } : {})}
+                      activeFilter={filter}
+                      onFilterChange={setFilter}
+                      sortOption={sortOption}
+                      onSortChange={setSortOption}
+                      categories={['all', 'skin', 'attachment']}
+                    />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[400px]">
+                <motion.div 
+                  layout
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[400px]"
+                >
                   <AnimatePresence mode="popLayout">
                     {isLoading || isFiltering ? (
                       [...Array(8)].map((_, i) => <ProductSkeleton key={i} />)
                     ) : filteredProducts.length === 0 ? (
                       <motion.div 
+                        key="empty-state"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
                         className="col-span-full py-24 flex flex-col items-center justify-center text-center bg-white/[0.02] border border-dashed border-white/10 rounded-[3rem] relative group overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-brand-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
@@ -249,6 +266,7 @@ export default function Storefront() {
                             onClick={() => {
                               setSearchParams({});
                               setFilter('all');
+                              setSortOption('newest');
                             }}
                             className="bg-brand-primary text-black px-10 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all flex items-center gap-2 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(0,255,204,0.2)]"
                           >
@@ -267,7 +285,7 @@ export default function Storefront() {
                       ))
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
               </section>
 
               {/* Artist CTA */}

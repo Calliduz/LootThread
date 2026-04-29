@@ -309,6 +309,19 @@ export const deletePromoCode = async (id: string) => {
 };
 
 // ---------------------------------------------------------------------------
+// REVIEWS
+// ---------------------------------------------------------------------------
+export const addReview = async (data: { productId: string; rating: number; comment: string }) => {
+  const response = await axiosInstance.post('/reviews', data);
+  return response.data;
+};
+
+export const getProductReviews = async (productId: string) => {
+  const response = await axiosInstance.get<{ reviews: any[]; averageRating: number; totalReviews: number }>(`/reviews/product/${productId}`);
+  return response.data;
+};
+
+// ---------------------------------------------------------------------------
 // UPLOAD
 // ---------------------------------------------------------------------------
 export const uploadImage = async (file: File): Promise<{ url: string; message: string }> => {
