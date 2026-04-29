@@ -95,7 +95,6 @@ export default function ProductDetail({
     }
   };
 
-  const averageRating = '5.0';
 
   return (
     <div className="px-6 lg:px-12 py-12 max-w-7xl mx-auto w-full">
