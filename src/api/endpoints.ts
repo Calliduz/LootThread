@@ -257,6 +257,11 @@ export const updateOrderStatus = async (id: string, status: string) => {
   return response.data;
 };
 
+export const updateBulkOrderStatus = async (ids: string[], status: string) => {
+  const response = await axiosInstance.put('/orders/bulk-status', { ids, status });
+  return response.data;
+};
+
 // ---------------------------------------------------------------------------
 // NEWSLETTER
 // ---------------------------------------------------------------------------

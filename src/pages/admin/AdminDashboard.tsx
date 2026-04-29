@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { getAdminDashboardStats } from '../../api/endpoints';
+import { getAdminDashboardStats, getProducts } from '../../api/endpoints';
+import { Product } from '../../types/api';
 import { DollarSign, Clock, Package, Users, TrendingUp, AlertTriangle } from 'lucide-react';
 import { SkeletonCard } from '../../components/Skeleton';
 
@@ -59,13 +60,20 @@ function StatCard({ label, value, icon: Icon, accent, sub, trend }: StatCardProp
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    getAdminDashboardStats()
-      .then(data => setStats(data))
-      .catch(() => setError('Failed to load dashboard stats.'))
+    Promise.all([
+      getAdminDashboardStats(),
+      getProducts()
+    ])
+      .then(([statsData, productsData]) => {
+        setStats(statsData);
+        setProducts(productsData);
+      })
+      .catch(() => setError('Failed to load dashboard data.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -139,6 +147,24 @@ export default function AdminDashboard() {
           sub="Registered accounts"
         />
       </div>
+
+      {/* Critical Alerts */}
+      {products.filter(p => (p.stockQuantity ?? 0) < 5).length > 0 && (
+        <div className="bg-red-500/5 border border-red-500/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-widest text-white">Low Stock Alert</h3>
+              <p className="text-xs text-white/40 mt-1">{products.filter(p => (p.stockQuantity ?? 0) < 5).length} products are running critically low on inventory.</p>
+            </div>
+          </div>
+          <a href="/admin/products" className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+            Restock Now
+          </a>
+        </div>
+      )}
 
       {/* Recent Transactions Table */}
       <div className="bg-bg-card border border-white/5 rounded-3xl overflow-hidden shadow-2xl">

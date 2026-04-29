@@ -5,7 +5,7 @@ import {
   getProducts, getArtists, getCollections,
   createProduct, updateProduct, deleteProduct
 } from '../../api/endpoints';
-import { Plus, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Image as ImageIcon, Copy } from 'lucide-react';
 import { SkeletonRow } from '../../components/Skeleton';
 import ImageUpload from '../../components/admin/ImageUpload';
 import { getAssetUrl } from '../../utils/assetHelper';
@@ -97,6 +97,23 @@ export default function AdminProducts() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
+  };
+
+  const handleDuplicate = (product: Product) => {
+    setEditingProduct(null);
+    setFormData({
+      title: `${product.title || product.name} (Copy)`,
+      name: `${product.name} (Copy)`,
+      description: product.description || '',
+      price: product.price || 0,
+      stockQuantity: 0, // Reset stock for new copy
+      type: product.type || product.category || 'skin',
+      artistId: product.artistId || '',
+      collectionId: product.collectionId || '',
+      imageUrl: product.imageUrl || (product.images && product.images[0]) || '',
+    });
+    setIsModalOpen(true);
+    toast.info('Adjust details for the new product.');
   };
 
   const handleDelete = async (id: string) => {
@@ -248,6 +265,13 @@ export default function AdminProducts() {
                           title="Edit"
                         >
                           <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDuplicate(product)}
+                          className="p-2 hover:bg-white/10 text-white/40 hover:text-brand-primary rounded-lg transition-colors"
+                          title="Duplicate"
+                        >
+                          <Copy className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(product.id)}

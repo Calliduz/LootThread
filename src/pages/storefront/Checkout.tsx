@@ -5,7 +5,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { useCart } from '../../contexts/CartContext';
 import { createOrder, createPaymentIntent, getProfile, validatePromoCode, getEligiblePromoCodes } from '../../api/endpoints';
 import { getAssetUrl } from '../../utils/assetHelper';
-import { Loader2, CheckCircle, Package, Zap, ArrowLeft, ShieldCheck, MapPin, Tag, X, BadgePercent } from 'lucide-react';
+import { Loader2, CheckCircle, Package, Zap, ArrowLeft, ShieldCheck, MapPin, Tag, X, BadgePercent, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_mock');
@@ -284,7 +284,7 @@ function CheckoutForm({
                     <span>Subtotal</span><span>₱{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-xs text-white/40">
-                    <span>Shipping</span><span className="text-white/30 italic">Calculated at delivery</span>
+                    <span>Shipping</span><span className="text-brand-primary/80 font-bold uppercase tracking-widest text-[10px]">Free (Standard Delivery)</span>
                   </div>
 
                   {/* Discount line item */}
@@ -334,17 +334,20 @@ function CheckoutForm({
 
 // ─── CheckoutLoader: handles promo code state + payment intent ─────────────────
 function CheckoutLoader() {
-  const { cartItems } = useCart();
+  const { cartItems, clearCart } = useCart();
+  const navigate = useNavigate();
   const [intentData, setIntentData] = useState<PaymentIntentData | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<DeliveryAddress[]>([]);
   const [cartSnapshot, setCartSnapshot] = useState<any[]>([]);
   const [promoInput, setPromoInput] = useState('');
-  const [promoError, setPromoError] = useState('');
-  const [validatingPromo, setValidatingPromo] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
   const [autoAppliedPromo, setAutoAppliedPromo] = useState<string | null>(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [initError, setInitError] = useState<string | null>(null);
 
   const fetchPaymentIntent = async (promoCode?: string) => {
+    setInitError(null);
     try {
       const data = await createPaymentIntent({
         items: cartItems.map(i => ({ productId: i.productId, quantity: i.quantity })),
@@ -400,6 +403,26 @@ function CheckoutLoader() {
     setPromoError('');
     await fetchPaymentIntent();
   };
+
+  if (initError) {
+    return (
+      <div className="min-h-screen bg-bg-dark flex flex-col items-center justify-center p-6 text-white text-center">
+        <div className="w-16 h-16 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-center justify-center mb-6">
+          <AlertTriangle className="w-8 h-8 text-red-400" />
+        </div>
+        <h2 className="text-2xl font-black uppercase italic tracking-tighter mb-2">Gateway Error</h2>
+        <p className="text-white/40 text-sm max-w-xs mb-8">{initError}</p>
+        <div className="flex gap-4">
+          <button onClick={() => navigate('/')} className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 font-bold uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all">
+            Return Home
+          </button>
+          <button onClick={() => fetchPaymentIntent(appliedPromo || undefined)} className="px-8 py-3 rounded-xl bg-brand-primary text-black font-black uppercase tracking-widest text-[10px] hover:brightness-110 transition-all">
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!intentData) {
     return (

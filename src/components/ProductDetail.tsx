@@ -120,7 +120,7 @@ export default function ProductDetail({
           <div className="flex items-center gap-8 mb-10">
             <div className="flex flex-col">
               <span className="text-xs uppercase tracking-widest text-white/30 font-bold mb-1">Price</span>
-              <span className="text-4xl font-mono font-bold text-brand-primary">${product.price}</span>
+              <span className="text-4xl font-mono font-bold text-brand-primary">₱{product.price}</span>
             </div>
             <div className="h-12 w-px bg-white/10" />
             <div className="flex flex-col">

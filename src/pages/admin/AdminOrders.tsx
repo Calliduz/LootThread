@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getAllOrders, updateOrderStatus } from '../../api/endpoints';
+import { getAllOrders, updateOrderStatus, updateBulkOrderStatus } from '../../api/endpoints';
 import {
   Loader2, AlertTriangle, Package, ChevronDown,
-  X, CheckCircle, Clock, XCircle, RefreshCw, Eye, Search
+  X, CheckCircle, Clock, XCircle, RefreshCw, Eye, Search,
+  Square, CheckSquare, Play, PackageCheck, Ban
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SkeletonRow } from '../../components/Skeleton';
@@ -149,6 +150,8 @@ export default function AdminOrders() {
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
   const [expandedOrder, setExpandedOrder] = useState<Order | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const { toasts, add: addToast } = useToast();
 
   const fetchOrders = useCallback(() => {
@@ -176,6 +179,68 @@ export default function AdminOrders() {
     }
   };
 
+  const handleBulkStatusChange = async (newStatus: string) => {
+    if (selectedOrders.length === 0) return;
+    setLoading(true);
+    try {
+      await updateBulkOrderStatus(selectedOrders, newStatus);
+      setOrders(prev => prev.map(o => selectedOrders.includes(o._id) ? { ...o, status: newStatus as Order['status'] } : o));
+      addToast(`${selectedOrders.length} orders updated to ${newStatus}`, 'success');
+      setSelectedOrders([]);
+    } catch {
+      addToast('Failed to update orders.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrders.length === filteredOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(filteredOrders.map(o => o._id));
+    }
+  };
+
+  const toggleSelectOrder = (id: string) => {
+    setSelectedOrders(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const filteredOrders = orders.filter(o => statusFilter === 'all' || o.status === statusFilter);
+
+  const seedTestData = async () => {
+    // This is for development testing only
+    const mockOrder = {
+      items: [{ productId: 'mock-id', name: 'Tactical Hoodie', quantity: 1, price: 4500 }],
+      totalAmount: 4500,
+      deliveryAddress: '123 Mock St, Quezon City',
+      paymentMethod: 'simulated',
+      gameTag: 'MOCK_USER_123'
+    };
+    
+    setLoading(true);
+    try {
+      // We can't easily call createOrder without auth, but we can just use the endpoints if we want
+      // For now, let's just show a toast that says "Seeding..."
+      addToast('Mock data seeding is enabled in local environments.', 'info');
+      // In a real scenario, we'd have a specific dev endpoint or just local state injection
+      // Let's inject into state for immediate feedback if in dev
+      const newMock: Order = {
+        _id: Math.random().toString(36).substr(2, 9),
+        status: 'pending',
+        totalAmount: 4500,
+        gameTag: 'MOCK_PLAYER',
+        createdAt: new Date().toISOString(),
+        items: mockOrder.items,
+        deliveryAddress: mockOrder.deliveryAddress,
+        paymentMethod: mockOrder.paymentMethod
+      };
+      setOrders(prev => [newMock, ...prev]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6 relative">
@@ -198,23 +263,40 @@ export default function AdminOrders() {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black uppercase italic tracking-tighter text-white">
-            Order <span className="text-brand-primary">Management</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-black italic tracking-tighter text-white">
+            ORDERS_<span className="text-brand-primary">HUB</span>
           </h1>
-          <p className="text-white/30 text-sm mt-1">
-            {loading ? 'Loading...' : `${orders.length} order${orders.length !== 1 ? 's' : ''} total`}
-          </p>
+          {process.env.NODE_ENV === 'development' && (
+            <button 
+              onClick={seedTestData}
+              className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[9px] font-black uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition-all"
+            >
+              Seed Data
+            </button>
+          )}
         </div>
-        <button
-          onClick={fetchOrders}
-          disabled={loading}
-          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white/50 transition-colors"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-brand-primary/50 transition-all"
+          >
+            <option value="all">All Orders</option>
+            {STATUS_OPTIONS.map(s => (
+              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            ))}
+          </select>
+          <button
+            onClick={fetchOrders}
+            disabled={loading}
+            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white/50 transition-colors"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Loading */}
@@ -245,15 +327,30 @@ export default function AdminOrders() {
       {!loading && !error && orders.length > 0 && (
         <div className="bg-bg-card border border-white/5 rounded-2xl overflow-hidden">
           {/* Table Header */}
-          <div className="hidden lg:grid grid-cols-[2fr_2fr_1.5fr_1fr_1.5fr_2fr_auto] gap-4 px-6 py-3 border-b border-white/5">
-            {['Order ID', 'Customer', 'Date', 'Total', 'Game Tag', 'Status', 'Items'].map(h => (
+          <div className="hidden lg:grid grid-cols-[50px_2fr_2fr_1.5fr_1fr_1.5fr_2fr_auto] gap-4 px-6 py-3 border-b border-white/5 items-center">
+            <button 
+              onClick={toggleSelectAll} 
+              data-testid="select-all-orders"
+              className="w-5 h-5 flex items-center justify-center text-white/20 hover:text-brand-primary transition-colors"
+            >
+              {selectedOrders.length === filteredOrders.length && filteredOrders.length > 0 ? <CheckSquare className="w-4 h-4 text-brand-primary" /> : <Square className="w-4 h-4" />}
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Order ID</span>
+              {selectedOrders.length > 0 && (
+                <span className="px-1.5 py-0.5 rounded bg-brand-primary text-black text-[8px] font-black">
+                  {selectedOrders.length} SELECTED
+                </span>
+              )}
+            </div>
+            {['Customer', 'Date', 'Total', 'Game Tag', 'Status', 'Actions'].map(h => (
               <span key={h} className="text-[10px] font-black uppercase tracking-widest text-white/30">{h}</span>
             ))}
           </div>
 
           {/* Rows */}
           <div className="divide-y divide-white/[0.04]">
-            {orders.map(order => {
+            {filteredOrders.map(order => {
               const statusCfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
               const StatusIcon = statusCfg.icon;
               const isUpdating = updating === order._id;
@@ -264,8 +361,18 @@ export default function AdminOrders() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.03)" }}
-                  className="grid grid-cols-1 lg:grid-cols-[2fr_2fr_1.5fr_1fr_1.5fr_2fr_auto] gap-4 items-center px-6 py-5 transition-colors group cursor-default"
+                  className={`grid grid-cols-1 lg:grid-cols-[50px_2fr_2fr_1.5fr_1fr_1.5fr_2fr_auto] gap-4 items-center px-6 py-5 transition-all group cursor-default border-l-2 ${selectedOrders.includes(order._id) ? 'bg-brand-primary/5 border-brand-primary' : 'border-transparent'}`}
                 >
+                  {/* Checkbox */}
+                  <div className="hidden lg:block">
+                    <button 
+                      onClick={() => toggleSelectOrder(order._id)} 
+                      data-testid={`select-order-${order._id}`}
+                      className="w-5 h-5 flex items-center justify-center text-white/20 hover:text-brand-primary transition-colors"
+                    >
+                      {selectedOrders.includes(order._id) ? <CheckSquare className="w-4 h-4 text-brand-primary" /> : <Square className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {/* Order ID */}
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-white/20 lg:hidden mb-1">Order ID</p>
@@ -335,15 +442,45 @@ export default function AdminOrders() {
                     </div>
                   </div>
 
-                  {/* View Items */}
-                  <div>
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <AnimatePresence mode="wait">
+                      {order.status === 'pending' && (
+                        <motion.button
+                          data-testid={`process-btn-${order._id}`}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          onClick={() => handleStatusChange(order._id, 'processing')}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/20 text-[9px] font-black uppercase tracking-widest transition-all"
+                          title="Start Processing"
+                        >
+                          <Play className="w-3 h-3" />
+                          Process
+                        </motion.button>
+                      )}
+                      {order.status === 'processing' && (
+                        <motion.button
+                          data-testid={`complete-btn-${order._id}`}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          onClick={() => handleStatusChange(order._id, 'completed')}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-black border border-brand-primary/20 text-[9px] font-black uppercase tracking-widest transition-all"
+                          title="Complete Order"
+                        >
+                          <PackageCheck className="w-3 h-3" />
+                          Complete
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+                    
                     <button
                       onClick={() => setExpandedOrder(order)}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-brand-primary hover:text-black border border-white/10 hover:border-brand-primary text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 group/btn"
+                      className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/40 hover:text-white transition-all"
                       title="Inspect components"
                     >
                       <Eye className="w-4 h-4" />
-                      <span className="hidden xl:inline">Inspect</span>
                     </button>
                   </div>
                 </motion.div>
@@ -357,6 +494,58 @@ export default function AdminOrders() {
       <AnimatePresence>
         {expandedOrder && (
           <OrderItemsModal order={expandedOrder} onClose={() => setExpandedOrder(null)} />
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Action Bar */}
+      <AnimatePresence>
+        {selectedOrders.length > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-6 bg-bg-card border border-brand-primary/30 px-8 py-4 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+          >
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">Tactical Batch</span>
+              <span className="text-xs font-bold text-white">{selectedOrders.length} Orders Selected</span>
+            </div>
+
+            <div className="h-8 w-px bg-white/10" />
+
+            <div className="flex items-center gap-2">
+              <button
+                data-testid="bulk-process-btn"
+                onClick={() => handleBulkStatusChange('processing')}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/20 text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                <Play className="w-3.5 h-3.5" />
+                Process
+              </button>
+              <button
+                data-testid="bulk-complete-btn"
+                onClick={() => handleBulkStatusChange('completed')}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-black border border-brand-primary/20 text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                <PackageCheck className="w-3.5 h-3.5" />
+                Complete
+              </button>
+              <button
+                onClick={() => handleBulkStatusChange('cancelled')}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                <Ban className="w-3.5 h-3.5" />
+                Cancel
+              </button>
+            </div>
+
+            <button
+              onClick={() => setSelectedOrders([])}
+              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
